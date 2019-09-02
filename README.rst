@@ -1,8 +1,8 @@
-ldraw-py
+toolbox-py
 ========
 
 .. image:: https://img.shields.io/badge/license-MIT-blue.svg
-    :target: https://github.com/fx-bricks/pfx-brick-py/blob/master/LICENSE.md
+    :target: https://github.com/michaelgale/toolbox-py/blob/master/LICENSE.md
 
 A general purpose collection of useful python tools and utility functions.
 
@@ -33,11 +33,6 @@ An example of the package can be seen below
 .. code-block:: python
 
     from toolbox import digest_config
-
-
-.. code-block:: shell
-
-    White
 
 
 Requirements
