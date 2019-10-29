@@ -1,0 +1,13 @@
+abc:
+    a1: 0.0
+    a2: 1.0
+    a3: 5.0
+defg:
+    b1: '10 %'
+    b2: '25 mm'
+    b3: '7 studs'
+hijk:
+    c1: "This param"
+    c2: "That param"
+    c3: True
+    c4: [0, 1, 2, 3, 5, 8, 13]

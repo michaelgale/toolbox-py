@@ -58,5 +58,7 @@ setuptools.setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License'
     ],
-    install_requires=[]
+    install_requires=[
+        'pyyaml',
+    ]
 )

@@ -9,7 +9,7 @@ A general purpose collection of useful python tools and utility functions.
 Installation
 ------------
 
-The **toolbox-py** package can be installed directly from the source code:
+The **toolbox** package can be installed directly from the source code:
 
 .. code-block:: shell
 
@@ -32,13 +32,16 @@ An example of the package can be seen below
 
 .. code-block:: python
 
-    from toolbox import digest_config
+    from toolbox import Params
+    tp = Params(yml="test_params.yml")
+    print(tp)
 
 
 Requirements
 ^^^^^^^^^^^^
 
 * Python 3.6+
+* pyyaml
 
 
 Authors
