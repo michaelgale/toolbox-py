@@ -172,7 +172,11 @@ class Params(dict):
 
         self.__dict__ = self
         if yml is not None:
-            obj = read([yml])
+            if isinstance(yml, list):
+                obj = read(yml)
+            else:
+                obj = read([yml])
+
             kwargs = obj
 
         for k, v in list(obj.items()):
