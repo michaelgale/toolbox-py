@@ -29,6 +29,7 @@ import re
 import yaml
 import inspect
 import itertools as it
+from metayaml import read
 
 
 # Dictionary processing based on 3b1b's manim library
@@ -171,12 +172,7 @@ class Params(dict):
 
         self.__dict__ = self
         if yml is not None:
-            with open(yml) as fp:
-                yml = fp.read()
-                if yml.endswith(".yml"):
-                    raise
-
-            obj = yaml.load(yml, Loader=yaml.FullLoader)
+            obj = read([yml])
             kwargs = obj
 
         for k, v in list(obj.items()):

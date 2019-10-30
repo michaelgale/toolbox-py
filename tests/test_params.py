@@ -38,7 +38,8 @@ def test_yaml_params():
     assert "abc" in tp.__dict__
     assert "defg" in tp.__dict__
     assert "hijk" in tp.__dict__
-    assert len(tp.abc) == 3
+    assert "pitch" in tp.__dict__
+    assert len(tp.abc) == 5
     assert tp.abc.a1 == 0
     assert tp.abc.a2 == 1.0
     assert tp.abc.a3 == 5.0
@@ -51,3 +52,5 @@ def test_yaml_params():
     assert len(tp.hijk.c4) == 7
     assert tp.hijk.c4[0] == 0
     assert tp.hijk.c4[-1] == 13
+    assert tp.abc.a4 == 8.0
+    assert tp.abc.a5 == 48.0

@@ -1,7 +1,13 @@
+
+pitch:  8.0
+length: 40.0
+
 abc:
     a1: 0.0
     a2: 1.0
     a3: 5.0
+    a4: ${pitch}
+    a5: ${pitch + length}
 defg:
     b1: '10 %'
     b2: '25 mm'

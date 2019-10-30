@@ -59,6 +59,6 @@ setuptools.setup(
         'License :: OSI Approved :: MIT License'
     ],
     install_requires=[
-        'pyyaml',
+        'metayaml',
     ]
 )
