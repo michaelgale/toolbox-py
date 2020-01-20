@@ -37,6 +37,7 @@ def test_str_constraint():
     x = str_constraint("<=9.0", 8)
     assert x
 
+
 def test_valid_value():
     x = is_valid_value(3, 3)
     assert x
@@ -53,7 +54,9 @@ def test_valid_value():
     x = is_valid_value(7.5, [">2", "<=7.5"])
     assert x
 
+
 all_words = ["abc", "def", "ghi", "jklmnop", "Important", "important", "ImPoRtAnT"]
+
 
 def test_word_list():
     x = are_words_in_word_list("abc", all_words, case_sensitive=False)

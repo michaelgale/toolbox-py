@@ -60,5 +60,6 @@ setuptools.setup(
     ],
     install_requires=[
         'metayaml',
+        "crayons",
     ]
 )
