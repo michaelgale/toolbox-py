@@ -72,6 +72,11 @@ def split_path(file):
     return os.path.split(full_path(file))
 
 
+def split_filename(file):
+    """ Splits a file name into base name and extension """
+    return os.path.splitext(file)
+
+
 def colour_path_str(file):
     fp = full_path(file)
     d, f = split_path(fp)
@@ -105,10 +110,11 @@ class FileOps:
     can also be verbosely logged for debugging or information.
     """
 
-    def __init__(self, simulate=False, verbose=False, overwrite=True):
+    def __init__(self, simulate=False, verbose=False, overwrite=False):
         self.simulate = simulate
         self.verbose = verbose
         self.overwrite = overwrite
+        self.safe_overwrite = True
         self.verbose_errors_only = True
 
     def verify_file(self, file):
@@ -117,6 +123,22 @@ class FileOps:
                 self.colprint("File ", file, " does not exist", "red")
             return False
         return True
+
+    def choose_safe_filename(self, file):
+        fp = full_path(file)
+        if os.path.isfile(fp):
+            d, f1 = split_path(fp)
+            f, e = split_filename(f1)
+            ok = False
+            suffix = 1
+            while not ok:
+                new_name = os.path.abspath(d + os.sep + f + "-" + str(suffix) + e)
+                suffix += 1
+                ok = not os.path.isfile(full_path(new_name))
+            if self.verbose:
+                self.colprint("Using safe filename ", new_name, " for ", "yellow", file)
+            return new_name
+        return file
 
     def colprint(self, prefix, name, suffix, colour="white", name2=None):
         if self.verbose_errors_only and colour == "green":
@@ -174,17 +196,16 @@ class FileOps:
     def move_file(self, src, dest):
         """ Moves supplied file src to new location specified with dest. 
         If moved file already exists, it will ignore the request
-        unless overwrite is True.  Returns True if the operation is
-        performed and False otherwise. """
+        unless overwrite or safe_overwrite is True.  Returns True if the
+        operation is performed and False otherwise. """
         if not self.verify_file(src):
             return False
         srcdir, srcname = split_path(src)
         # strip any superfluous name component from dest
         destdir, destname = split_path(dest)
-        # print(src, dest)
-        # print(srcdir, srcname)
-        # print(destdir, destname)
         newpath = os.path.normpath(destdir + os.sep + srcname)
+        if self.safe_overwrite:
+            newpath = self.choose_safe_filename(newpath)
         if not os.path.isfile(newpath) or self.overwrite:
             if not self.simulate:
                 os.rename(full_path(src), newpath)
@@ -200,8 +221,8 @@ class FileOps:
     def copy_file(self, src, dest):
         """ Copies supplied file src to new location specified with dest.
         If copied file already exists, it will ignore the request
-        unless overwrite is True.  Returns True if the operation is
-        performed and False otherwise. """
+        unless overwrite or safe_overwrite is True.  Returns True if 
+        the operation is performed and False otherwise. """
         if not self.verify_file(src):
             return False
         srcdir, srcname = split_path(src)
@@ -211,6 +232,8 @@ class FileOps:
             newpath = full_path(dest)
         else:
             newpath = os.path.normpath(destdir + os.sep + srcname)
+        if self.safe_overwrite:
+            newpath = self.choose_safe_filename(newpath)
         if not os.path.isfile(newpath) or self.overwrite:
             if not self.simulate:
                 shutil.copyfile(full_path(src), newpath)
@@ -301,13 +324,14 @@ class FileOps:
                         self.colprint("Removing file ", f, " from ", "green", root)
                     if not self.simulate:
                         os.unlink(os.path.join(root, f))
-                for d in dirs:
-                    if self.verbose:
-                        self.colprint(
-                            "Removing sub-directory ", d, " from ", "green", root
-                        )
-                    if not self.simulate:
-                        shutil.rmtree(os.path.join(root, d))
+                if remove_subdir:
+                    for d in dirs:
+                        if self.verbose:
+                            self.colprint(
+                                "Removing sub-directory ", d, " from ", "green", root
+                            )
+                        if not self.simulate:
+                            shutil.rmtree(os.path.join(root, d))
                 return True
         elif self.verbose:
             self.colprint("Directory ", dirname, " does not exist", "red")

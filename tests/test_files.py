@@ -29,7 +29,7 @@ def test_split_path():
 
 fo = FileOps(simulate=True, verbose=VERBOSE, overwrite=False)
 fo.verbose_errors_only = False
-
+fo.safe_overwrite = False
 
 def test_fileops():
     res = fo.rename_file("./testfiles/file1.txt", "filex.txt")
@@ -54,6 +54,10 @@ def test_fileops():
     assert res
     res = fo.copy_file("./testfiles/file1.txt", "./testfiles")
     assert not res
+    fo.safe_overwrite = True
+    res = fo.copy_file("./testfiles/file1.txt", "./testfiles")
+    fo.safe_overwrite = False
+    assert res
 
 
 def test_dirops():
@@ -78,7 +82,7 @@ def test_remove_ops():
     assert not res
     res = fo.remove_files_from_dir("./testfiles/file2.txt")
     assert not res
-    res = fo.remove_files_from_dir("./testfiles")
+    res = fo.remove_files_from_dir("./testfiles", remove_subdir=True)
     assert res
 
 
@@ -117,6 +121,7 @@ def test_real_move():
 
 def test_real_copy():
     fs.overwrite = True
+    fs.safe_overwrite = True
     res = fs.copy_file("./testfiles/file2.txt", "./testfiles/dir2")
     newfile = full_path("./testfiles/dir2/file2.txt")
     res = os.path.isfile(newfile)
@@ -135,6 +140,8 @@ def test_real_copy():
     assert res
     res = os.path.isfile(oldfile)
     assert not res
+    res = fs.remove_file("./testfiles/file2-1.txt")
+    assert res
 
 
 def test_real_dir():
