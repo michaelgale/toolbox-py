@@ -10,7 +10,7 @@ import string
 # my modules
 from toolbox import *
 
-VERBOSE = False
+VERBOSE = True
 
 
 def test_full_path():
@@ -32,6 +32,12 @@ fo.verbose_errors_only = False
 fo.safe_overwrite = False
 
 def test_fileops():
+    res = fo.get_file_list("./testfiles", recursive=True)
+    assert res
+    res = fo.get_file_list("./testfiles", spec="*.txt", recursive=False)
+    assert res
+    res = fo.get_file_list("./testfiles/file1.txt", recursive=False)
+    assert not res
     res = fo.rename_file("./testfiles/file1.txt", "filex.txt")
     assert res
     res = fo.rename_file("./testfiles/file1.txt", "file1.txt")
@@ -67,6 +73,11 @@ def test_dirops():
     assert not res
     res = fo.make_directory("./testfiles/newdir")
     assert res
+    files = fo.get_file_list("./testfiles", recursive=True)
+    if VERBOSE:
+        for f in files:
+            print(str(f))
+        fsumm = fo.print_file_summary("~/Code", recursive=True)
 
 
 def test_remove_ops():

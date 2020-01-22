@@ -61,5 +61,10 @@ setuptools.setup(
     install_requires=[
         'metayaml',
         "crayons",
-    ]
+    ],
+    scripts=['toolbox/scripts/foldercheck.py'],
+    # entry_points = {
+    #         'scripts': [ 'foldercheck=scripts:foldercheck.py',                  
+    #         ],              
+    #     },    
 )

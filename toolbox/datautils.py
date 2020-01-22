@@ -73,7 +73,7 @@ def is_valid_value(value, value_constraints, tolerance=0.1):
     return is_valid
 
 
-def are_words_in_word_list(words, word_list, case_sensitive=False):
+def are_words_in_word_list(words, word_list, case_sensitive=False, get_score=False):
     """ Checks if word(s) are contained in another word list.
     The search can be performed with or without case sensitivity.
     The check words can contain wildcards, e.g. "abc*" to allow
@@ -94,5 +94,9 @@ def are_words_in_word_list(words, word_list, case_sensitive=False):
             if wl.startswith(word):
                 found[word] = True
     if len(found) == len(check_words):
+        if get_score:
+            return True, len(found)
         return True
+    if get_score:
+        return False, len(found)
     return False

@@ -27,7 +27,52 @@
 import sys, os
 import os.path
 import shutil
+from pathlib import Path
 import crayons
+
+# File type groups
+image_files = [ "jpg", "jpeg", "png", "tiff", "bmp", "pxm", "gif", "ico", "raw", "ppm", "pgm", "pbm", "pnm", "tif", "xcf", "xpm", "psd", "pict", "xbm", "icns", "exif", "nef"]
+archive_files = [ "dmg", "zip", "gz", "tar", "bzip", "bz2", "7z", "arc", "lza", "jar", "rar", "tgz", "lzma", "tbz2", "iso", "msi", "cab", "rpm", "vdi", "vmdk", "deb", "egg", "pack", "xip", "pickle", "pkl", "whl", "wheel"]
+media_files = ["mov", "mp4", "avi", "xvid", "webm", "mpg", "mpg2", "m4v", "mkv", "flv", "swf", "wmv", "mpeg", "asf", "3gp"]
+audio_files = ["wav", "mp3", "m4c", "m4a", "aiff", "flac", "ogg", "gsm", "aup", "ac3", "wma", "aac", "au", "m4p"]
+vector_files = ["svg", "ai", "wmf", "graffle", "eps", "cdr", "cgm", "vsd", "amf", "gstencil"]
+cad_files = ["dwg", "dxf", "step", "stl", "iges", "igs", "blend1", "blend", "dae", "obj", "ply", "pov", "vrml", "gbr", "pcb", "sch", "lbr", "FCStd", "brd", ]
+doc_files = ["doc", "xls", "xlsx", "docx", "ppt", "pptx", "pages", "numbers", "keynote", "key", "pps", "gslides", "pdf", "txt", "md", "tex", "rst"]
+src_files = ["c", "cpp", "h", "hpp", "py", "pyi", "swift", "cxx", "hxx", "m", "mm", "js", "java", "sh", "v", "vhd", "vhdl", "nib", "cc", "asm", "scr", "ulp", "xcodeproj", "lua", "pl", "pm", "rb", "scpt", "rs", "ipynb", "coffee",  "vcproj", "lproj", "sln", "tcl"]
+web_files = ["html", "htm", "php", "css", "cgi", "rss", "rw", "rw6", "rw7", "webarchive"]
+obj_files = ["o", "a", "lib", "pyc", "coff", "elf", "dll", "so", "war", "com", "class", "ipa", "hex", "framework", "dvi", "dylib", "sdk", "swiftmodule", "pch"]
+lego_files = ["ldr", "lxf", "mpd", "dat", "ldd", "ldraw", "bbm", "pub"]
+cfg_files = ["cfg", "ini", "plist", "rc", "config", "xcconfig", "yml", "json", "conf"]
+font_files = ["ttf", "otf", "woff", "eot", "pfb", "afm", "woff2"]
+app_files = ["app", "exe", "bundle"]
+data_files = ["csv", "sqlite", "sqlite3", "log", "xml", "sqlitedb", "db", "data", "dtbase2", "dtmeta", ]
+file_groups = {
+    "Images": image_files,
+    "Audio": audio_files,
+    "Media": media_files,
+    "Archive": archive_files,
+    "Vector": vector_files,
+    "CAD": cad_files,
+    "Documents": doc_files,
+    "Source code": src_files,
+    "Web": web_files,
+    "Object code": obj_files,
+    "Lego": lego_files,
+    "Config": cfg_files,
+    "Fonts": font_files,
+    "Apps": app_files,
+    "Data": data_files,
+}
+
+def get_file_group(ext, fsgroup, size):
+    for k, v in file_groups.items():
+        if ext.lower() in v:
+            if k in fsgroup:
+                fsgroup[k][0] += 1
+                fsgroup[k][1] += size
+            else:
+                fsgroup[k] = [1, size]
+    return fsgroup
 
 # This useful context manager is based on the CadQuery FreeCAD plugin
 class SuppressStdoutStderr(object):
@@ -62,6 +107,8 @@ class SuppressStdoutStderr(object):
 
 def full_path(file):
     """ Returns the fully expanded path of a file"""
+    if "~" in file:
+        return os.path.expanduser(file)
     return os.path.expanduser(os.path.abspath(file))
 
 
@@ -100,6 +147,64 @@ def colour_path_str(file):
             s.append(str(crayons.cyan(file, bold=True)))
     return "".join(s)
 
+
+def file_size_str(size, style="colour"):
+    if size > 1e9:
+        s = "%.2f GB" % (size / 1e9)
+    elif size > 1e6:
+        s = "%.2f MB" % (size / 1e6)
+    elif size > 1e3:
+        s = "%.2f kB" % (size / 1e3)
+    else:
+        s = "%.0f bytes" % (size)
+    if style == "colour":
+        if size > 5e9:
+            return crayons.red("%10s" % (s))
+        if size > 2e9:
+            return crayons.red("%10s" % (s), bold=True)
+        if size > 1e9:
+            return crayons.yellow("%10s" % (s), bold=True)
+        if size > 5e8:
+            return crayons.yellow("%10s" % (s))
+        if size > 2e8:
+            return crayons.green("%10s" % (s), bold=True)
+        if size > 1e8:
+            return crayons.green("%10s" % (s))
+        if size > 5e7:
+            return crayons.cyan("%10s" % (s), bold=True)
+        if size > 2e7:
+            return crayons.cyan("%10s" % (s))
+        if size > 1e7:
+            return crayons.blue("%10s" % (s), bold=True)
+        if size > 5e6:
+            return crayons.blue("%10s" % (s))
+        if size > 2e6:
+            return crayons.magenta("%10s" % (s))
+        return crayons.black("%10s" % (s), bold=True)
+    else:
+        if size > 1e9:
+            return crayons.white("%10s" % (s), bold=True)
+        elif size > 250e6:
+            return crayons.white("%10s" % (s))
+        elif size > 50e6:
+            return crayons.normal("%10s" % (s))
+        return crayons.black("%10s" % (s), bold=True)
+
+def colour_list_str(t1, q1, s1, t2, q2, s2, style="colour"):
+
+    def _column(t, q, s):
+        cs = []
+        cs.append(str(crayons.normal("%15s" % (t))))
+        cs.append(" : ")
+        cs.append(str(crayons.cyan("%-6d" % (q))))
+        cs.append("(%10s)" % (file_size_str(s, style=style)))
+        return "".join(cs)
+
+    s = []
+    s.append(_column(t1, q1, s1))
+    s.append("  ")
+    s.append(_column(t2, q2, s2))
+    return "".join(s)
 
 class FileOps:
     """A convenience access class to perform file system 
@@ -337,3 +442,102 @@ class FileOps:
             self.colprint("Directory ", dirname, " does not exist", "red")
         return False
 
+    def get_file_list(self, path, spec="*", recursive=False, as_iterator=False):
+        """ Gets a file listing from the root of the specified path """
+        if not self.verify_dir_not_file(path):
+            return False
+        dirname = full_path(path)
+        if os.path.isdir(dirname):
+            files = Path(dirname).rglob(spec)
+            if as_iterator:
+                return files
+            return list(files)
+        elif self.verbose:
+            self.colprint("Directory ", dirname, " does not exist", "red")
+        return False
+
+    def print_file_summary(self, path, recursive=False, colour_list=True):
+        """ Gets a file listing from the root of the specified path """
+        if not self.verify_dir_not_file(path):
+            return False
+        dirname = full_path(path)
+        if os.path.isdir(dirname):
+            if recursive:
+                files = Path(dirname).rglob("*")
+            else:
+                files = Path(dirname).glob("*")
+
+            fs = {
+                "dir_count": 0,
+                "file_count": 0,
+                "file_types": 0,
+                "max_size": 0,
+                "total_size": 0,
+                "mean_size": 0,
+                "file_ext": {},
+                "file_groups": {},
+            }
+            for file in files:
+                size = 0
+                f, e = split_filename(file)
+                ext = e.replace(".", "").lower()
+
+                if os.path.isdir(file):
+                    fs["dir_count"] += 1
+                    if len(ext) > 0:
+                        size = sum(f.stat().st_size for f in file.glob('**/*') if f.is_file() )
+                elif os.path.isfile(file):
+                    fs["file_count"] += 1
+                    size = os.path.getsize(file)
+                    fs["max_size"] = max(size, fs["max_size"])
+                    fs["total_size"] += size
+                if len(ext) > 0:
+                    if ext in fs["file_ext"]:
+                        fs["file_ext"][ext][0] += 1
+                        fs["file_ext"][ext][1] += size
+                    else:
+                        fs["file_ext"][ext] = [1, size]
+                    fs["file_groups"] = get_file_group(ext, fs["file_groups"], size)
+            fs["file_types"] = len(fs["file_ext"])
+            if fs["file_count"] > 0:
+                fs["mean_size"] = fs["total_size"] / fs["file_count"]
+            if self.verbose:
+                print("Directory: " + crayons.blue(dirname, bold=True))
+                print("  Files         : " + crayons.cyan(fs["file_count"]))
+                print("  Directories   : " + crayons.cyan(fs["dir_count"]))
+                print("  Total size    : " + file_size_str(fs["total_size"], style="mono"))
+                print("  Max size      : " + file_size_str(fs["max_size"], style="mono"))
+                print("  Average size  : " + file_size_str(fs["mean_size"], style="mono"))
+                print(crayons.white("  File types    : ", bold=True) + crayons.cyan(fs["file_types"]))
+                listext = sorted(fs["file_ext"].items(), key=lambda x: x[1][1], reverse=True)
+                ccount, csize = 0, 0
+                minsize = 0.95 * (fs["total_size"])
+                mincount = 0.95 * (fs["file_count"])
+                maxcount = min(64, 0.95 * fs["file_types"])
+                exts, qtys, sizes = [], [], []
+                for i, el in enumerate(listext):
+                    if (ccount < mincount or csize < minsize) and i < maxcount:
+                        exts.append(el[0][:15])
+                        qtys.append(el[1][0])
+                        sizes.append(el[1][1])
+                    ccount += el[1][0]
+                    csize += el[1][1]
+                cs = sorted(zip(exts, qtys, sizes), key=lambda x: x[1], reverse=True)
+                style = "colour" if colour_list else "mono"
+                for e, q, s, c in zip(exts, qtys, sizes, cs):
+                    print(colour_list_str(e, q, s, c[0], c[1], c[2], style))
+                listgroup = sorted(fs["file_groups"].items(), key=lambda x: x[1][1], reverse=True)
+                print(crayons.white("   File groups  :", bold=True))
+                exts, qtys, sizes = [], [], []
+                for el in listgroup:
+                    exts.append(el[0][:15])
+                    qtys.append(el[1][0])
+                    sizes.append(el[1][1])
+                cs = sorted(zip(exts, qtys, sizes), key=lambda x: x[1], reverse=True)
+                for e, q, s, c in zip(exts, qtys, sizes, cs):
+                    print(colour_list_str(e, q, s, c[0], c[1], c[2], style))
+
+            return fs
+        elif self.verbose:
+            self.colprint("Directory ", dirname, " does not exist", "red")
+        return False
