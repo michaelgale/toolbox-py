@@ -10,7 +10,7 @@ import string
 # my modules
 from toolbox import *
 
-VERBOSE = True
+VERBOSE = False
 
 
 def test_full_path():
@@ -41,7 +41,7 @@ def test_fileops():
     res = fo.rename_file("./testfiles/file1.txt", "filex.txt")
     assert res
     res = fo.rename_file("./testfiles/file1.txt", "file1.txt")
-    assert not res
+    assert res
     res = fo.move_file("./testfiles/file1.txt", "./testfiles/dir1")
     assert res
     res = fo.move_file("./testfiles/file1.txt", "./testfiles/blah")
@@ -78,6 +78,7 @@ def test_dirops():
         for f in files:
             print(str(f))
         fsumm = fo.print_file_summary("~/Code", recursive=True)
+        fsumm = fo.print_dir_summary("~/Code")
 
 
 def test_remove_ops():

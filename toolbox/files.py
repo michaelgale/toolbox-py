@@ -29,23 +29,235 @@ import os.path
 import shutil
 from pathlib import Path
 import crayons
+from .niceprint import colour_path_str, file_size_str
 
 # File type groups
-image_files = [ "jpg", "jpeg", "png", "tiff", "bmp", "pxm", "gif", "ico", "raw", "ppm", "pgm", "pbm", "pnm", "tif", "xcf", "xpm", "psd", "pict", "xbm", "icns", "exif", "nef"]
-archive_files = [ "dmg", "zip", "gz", "tar", "bzip", "bz2", "7z", "arc", "lza", "jar", "rar", "tgz", "lzma", "tbz2", "iso", "msi", "cab", "rpm", "vdi", "vmdk", "deb", "egg", "pack", "xip", "pickle", "pkl", "whl", "wheel"]
-media_files = ["mov", "mp4", "avi", "xvid", "webm", "mpg", "mpg2", "m4v", "mkv", "flv", "swf", "wmv", "mpeg", "asf", "3gp"]
-audio_files = ["wav", "mp3", "m4c", "m4a", "aiff", "flac", "ogg", "gsm", "aup", "ac3", "wma", "aac", "au", "m4p"]
-vector_files = ["svg", "ai", "wmf", "graffle", "eps", "cdr", "cgm", "vsd", "amf", "gstencil"]
-cad_files = ["dwg", "dxf", "step", "stl", "iges", "igs", "blend1", "blend", "dae", "obj", "ply", "pov", "vrml", "gbr", "pcb", "sch", "lbr", "FCStd", "brd", ]
-doc_files = ["doc", "xls", "xlsx", "docx", "ppt", "pptx", "pages", "numbers", "keynote", "key", "pps", "gslides", "pdf", "txt", "md", "tex", "rst"]
-src_files = ["c", "cpp", "h", "hpp", "py", "pyi", "swift", "cxx", "hxx", "m", "mm", "js", "java", "sh", "v", "vhd", "vhdl", "nib", "cc", "asm", "scr", "ulp", "xcodeproj", "lua", "pl", "pm", "rb", "scpt", "rs", "ipynb", "coffee",  "vcproj", "lproj", "sln", "tcl"]
-web_files = ["html", "htm", "php", "css", "cgi", "rss", "rw", "rw6", "rw7", "webarchive"]
-obj_files = ["o", "a", "lib", "pyc", "coff", "elf", "dll", "so", "war", "com", "class", "ipa", "hex", "framework", "dvi", "dylib", "sdk", "swiftmodule", "pch"]
+image_files = [
+    "jpg",
+    "jpeg",
+    "png",
+    "tiff",
+    "bmp",
+    "pxm",
+    "gif",
+    "ico",
+    "raw",
+    "ppm",
+    "pgm",
+    "pbm",
+    "pnm",
+    "tif",
+    "xcf",
+    "xpm",
+    "psd",
+    "pict",
+    "xbm",
+    "icns",
+    "exif",
+    "nef",
+]
+archive_files = [
+    "dmg",
+    "zip",
+    "gz",
+    "tar",
+    "bzip",
+    "bz2",
+    "7z",
+    "arc",
+    "lza",
+    "jar",
+    "rar",
+    "tgz",
+    "lzma",
+    "tbz2",
+    "iso",
+    "msi",
+    "cab",
+    "rpm",
+    "vdi",
+    "vmdk",
+    "deb",
+    "egg",
+    "pack",
+    "xip",
+    "pickle",
+    "pkl",
+    "whl",
+    "wheel",
+]
+media_files = [
+    "mov",
+    "mp4",
+    "avi",
+    "xvid",
+    "webm",
+    "mpg",
+    "mpg2",
+    "m4v",
+    "mkv",
+    "flv",
+    "swf",
+    "wmv",
+    "mpeg",
+    "asf",
+    "3gp",
+]
+audio_files = [
+    "wav",
+    "mp3",
+    "m4c",
+    "m4a",
+    "aiff",
+    "flac",
+    "ogg",
+    "gsm",
+    "aup",
+    "ac3",
+    "wma",
+    "aac",
+    "au",
+    "m4p",
+]
+vector_files = [
+    "svg",
+    "ai",
+    "wmf",
+    "graffle",
+    "eps",
+    "cdr",
+    "cgm",
+    "vsd",
+    "amf",
+    "gstencil",
+]
+cad_files = [
+    "dwg",
+    "dxf",
+    "step",
+    "stl",
+    "iges",
+    "igs",
+    "blend1",
+    "blend",
+    "dae",
+    "obj",
+    "ply",
+    "pov",
+    "vrml",
+    "gbr",
+    "pcb",
+    "sch",
+    "lbr",
+    "FCStd",
+    "brd",
+]
+doc_files = [
+    "doc",
+    "xls",
+    "xlsx",
+    "docx",
+    "ppt",
+    "pptx",
+    "pages",
+    "numbers",
+    "keynote",
+    "key",
+    "pps",
+    "gslides",
+    "pdf",
+    "txt",
+    "md",
+    "tex",
+    "rst",
+]
+src_files = [
+    "c",
+    "cpp",
+    "h",
+    "hpp",
+    "py",
+    "pyi",
+    "swift",
+    "cxx",
+    "hxx",
+    "m",
+    "mm",
+    "js",
+    "java",
+    "sh",
+    "v",
+    "vhd",
+    "vhdl",
+    "nib",
+    "cc",
+    "asm",
+    "scr",
+    "ulp",
+    "xcodeproj",
+    "lua",
+    "pl",
+    "pm",
+    "rb",
+    "scpt",
+    "rs",
+    "ipynb",
+    "coffee",
+    "vcproj",
+    "lproj",
+    "sln",
+    "tcl",
+]
+web_files = [
+    "html",
+    "htm",
+    "php",
+    "css",
+    "cgi",
+    "rss",
+    "rw",
+    "rw6",
+    "rw7",
+    "webarchive",
+]
+obj_files = [
+    "o",
+    "a",
+    "lib",
+    "pyc",
+    "coff",
+    "elf",
+    "dll",
+    "so",
+    "war",
+    "com",
+    "class",
+    "ipa",
+    "hex",
+    "framework",
+    "dvi",
+    "dylib",
+    "sdk",
+    "swiftmodule",
+    "pch",
+]
 lego_files = ["ldr", "lxf", "mpd", "dat", "ldd", "ldraw", "bbm", "pub"]
 cfg_files = ["cfg", "ini", "plist", "rc", "config", "xcconfig", "yml", "json", "conf"]
 font_files = ["ttf", "otf", "woff", "eot", "pfb", "afm", "woff2"]
 app_files = ["app", "exe", "bundle"]
-data_files = ["csv", "sqlite", "sqlite3", "log", "xml", "sqlitedb", "db", "data", "dtbase2", "dtmeta", ]
+data_files = [
+    "csv",
+    "sqlite",
+    "sqlite3",
+    "log",
+    "xml",
+    "sqlitedb",
+    "db",
+    "data",
+    "dtbase2",
+    "dtmeta",
+]
+
 file_groups = {
     "Images": image_files,
     "Audio": audio_files,
@@ -64,6 +276,7 @@ file_groups = {
     "Data": data_files,
 }
 
+
 def get_file_group(ext, fsgroup, size):
     for k, v in file_groups.items():
         if ext.lower() in v:
@@ -73,6 +286,7 @@ def get_file_group(ext, fsgroup, size):
             else:
                 fsgroup[k] = [1, size]
     return fsgroup
+
 
 # This useful context manager is based on the CadQuery FreeCAD plugin
 class SuppressStdoutStderr(object):
@@ -107,7 +321,7 @@ class SuppressStdoutStderr(object):
 
 def full_path(file):
     """ Returns the fully expanded path of a file"""
-    if "~" in file:
+    if "~" in str(file):
         return os.path.expanduser(file)
     return os.path.expanduser(os.path.abspath(file))
 
@@ -124,74 +338,7 @@ def split_filename(file):
     return os.path.splitext(file)
 
 
-def colour_path_str(file):
-    fp = full_path(file)
-    d, f = split_path(fp)
-    s = []
-    if f is not None:
-        if len(file) == len(f):
-            s.append(str(crayons.cyan(file, bold=True)))
-        else:
-            idx = file.find(f) - 1
-            s.append(str(crayons.blue(file[:idx] + os.sep, bold=True)))
-            if os.path.isfile(fp):
-                s.append(str(crayons.cyan(f, bold=True)))
-            elif os.path.isdir(fp):
-                s.append(str(crayons.blue(f, bold=True)))
-            else:
-                s.append(str(crayons.cyan(f, bold=True)))
-    else:
-        if os.path.isdir(fp):
-            s.append(str(crayons.blue(file + os.sep, bold=True)))
-        else:
-            s.append(str(crayons.cyan(file, bold=True)))
-    return "".join(s)
-
-
-def file_size_str(size, style="colour"):
-    if size > 1e9:
-        s = "%.2f GB" % (size / 1e9)
-    elif size > 1e6:
-        s = "%.2f MB" % (size / 1e6)
-    elif size > 1e3:
-        s = "%.2f kB" % (size / 1e3)
-    else:
-        s = "%.0f bytes" % (size)
-    if style == "colour":
-        if size > 5e9:
-            return crayons.red("%10s" % (s))
-        if size > 2e9:
-            return crayons.red("%10s" % (s), bold=True)
-        if size > 1e9:
-            return crayons.yellow("%10s" % (s), bold=True)
-        if size > 5e8:
-            return crayons.yellow("%10s" % (s))
-        if size > 2e8:
-            return crayons.green("%10s" % (s), bold=True)
-        if size > 1e8:
-            return crayons.green("%10s" % (s))
-        if size > 5e7:
-            return crayons.cyan("%10s" % (s), bold=True)
-        if size > 2e7:
-            return crayons.cyan("%10s" % (s))
-        if size > 1e7:
-            return crayons.blue("%10s" % (s), bold=True)
-        if size > 5e6:
-            return crayons.blue("%10s" % (s))
-        if size > 2e6:
-            return crayons.magenta("%10s" % (s))
-        return crayons.black("%10s" % (s), bold=True)
-    else:
-        if size > 1e9:
-            return crayons.white("%10s" % (s), bold=True)
-        elif size > 250e6:
-            return crayons.white("%10s" % (s))
-        elif size > 50e6:
-            return crayons.normal("%10s" % (s))
-        return crayons.black("%10s" % (s), bold=True)
-
 def colour_list_str(t1, q1, s1, t2, q2, s2, style="colour"):
-
     def _column(t, q, s):
         cs = []
         cs.append(str(crayons.normal("%15s" % (t))))
@@ -205,6 +352,7 @@ def colour_list_str(t1, q1, s1, t2, q2, s2, style="colour"):
     s.append("  ")
     s.append(_column(t2, q2, s2))
     return "".join(s)
+
 
 class FileOps:
     """A convenience access class to perform file system 
@@ -221,8 +369,10 @@ class FileOps:
         self.overwrite = overwrite
         self.safe_overwrite = True
         self.verbose_errors_only = True
+        self.last_file = ""
 
     def verify_file(self, file):
+        """ Checks if a file exists """
         if not os.path.isfile(full_path(file)):
             if self.verbose:
                 self.colprint("File ", file, " does not exist", "red")
@@ -230,6 +380,9 @@ class FileOps:
         return True
 
     def choose_safe_filename(self, file):
+        """ Checks if a file already exists and returns a alternative
+        filename with a suffix "-1", "-2", ... until a unique name is found,
+        otherwise it will simply return the file name as is """
         fp = full_path(file)
         if os.path.isfile(fp):
             d, f1 = split_path(fp)
@@ -268,6 +421,7 @@ class FileOps:
             print("".join(s))
 
     def verify_dir_not_file(self, name):
+        """ Checks if a name refers to a file rather than a directory """
         dirname = full_path(name)
         if os.path.isfile(dirname):
             if self.verbose:
@@ -288,6 +442,12 @@ class FileOps:
         # strip any superfluous path info from dest
         destdir, destname = split_path(dest)
         newpath = os.path.normpath(srcdir + os.sep + destname)
+        self.last_file = newpath
+        # check for trivial rename with same name
+        if srcname == destname:
+            return True
+        if self.safe_overwrite:
+            newpath = self.choose_safe_filename(newpath)
         if not os.path.isfile(newpath) or self.overwrite:
             if not self.simulate:
                 os.rename(full_path(src), newpath)
@@ -313,7 +473,7 @@ class FileOps:
             newpath = self.choose_safe_filename(newpath)
         if not os.path.isfile(newpath) or self.overwrite:
             if not self.simulate:
-                os.rename(full_path(src), newpath)
+                shutil.move(full_path(src), newpath)
             if self.verbose:
                 self.colprint("File ", srcname, " moved to ", "green", dest)
             return True
@@ -456,6 +616,59 @@ class FileOps:
             self.colprint("Directory ", dirname, " does not exist", "red")
         return False
 
+    def print_dir_summary(self, path, colour_list=True):
+        """ Gets a sub-directory listing from the root of the specified path """
+        if not self.verify_dir_not_file(path):
+            return False
+        dirname = full_path(path)
+        if os.path.isdir(dirname):
+            fs = {
+                "dir_count": 0,
+                "file_count": 0,
+                "max_size": 0,
+                "total_size": 0,
+                "mean_size": 0,
+                "dir_size": {},
+            }
+            longest_name = 0
+            files = Path(dirname).glob("*")
+            for file in files:
+                size = 0
+                f, e = split_filename(file)
+                ext = e.replace(".", "").lower()
+                if os.path.isdir(file):
+                    size = sum(
+                        f.stat().st_size for f in file.glob("**/*") if f.is_file()
+                    )
+                    subdir = str(file).replace(dirname, "").replace(os.sep, "")
+                    fs["dir_size"][subdir] = size
+                    fs["dir_count"] += 1
+                    longest_name = max(len(subdir), longest_name)
+                elif os.path.isfile(file):
+                    fs["file_count"] += 1
+                    size = os.path.getsize(file)
+                fs["total_size"] += size
+                fs["max_size"] = max(size, fs["max_size"])
+            if fs["file_count"] > 0:
+                fs["mean_size"] = fs["total_size"] / fs["dir_count"]
+            print("Directory: " + crayons.blue(dirname, bold=True))
+            print("  Files         : " + crayons.cyan(fs["file_count"]))
+            print("  Directories   : " + crayons.cyan(fs["dir_count"]))
+            print("  Total size    : " + file_size_str(fs["total_size"], style="mono"))
+            print("  Max size      : " + file_size_str(fs["max_size"], style="mono"))
+            print("  Average size  : " + file_size_str(fs["mean_size"], style="mono"))
+            listext = sorted(fs["dir_size"].items(), key=lambda x: x[1], reverse=True)
+            longest_name = max(15, longest_name)
+            fmt = "%%%ds : %%10s" % (longest_name)
+            style = "colour" if colour_list else "mono"
+            for el in listext:
+                sd = " " * (longest_name - len(el[0])) + crayons.blue(el[0], bold=True)
+                print(fmt % (sd, file_size_str(el[1], style=style)))
+
+        elif self.verbose:
+            self.colprint("Directory ", dirname, " does not exist", "red")
+        return False
+
     def print_file_summary(self, path, recursive=False, colour_list=True):
         """ Gets a file listing from the root of the specified path """
         if not self.verify_dir_not_file(path):
@@ -485,7 +698,9 @@ class FileOps:
                 if os.path.isdir(file):
                     fs["dir_count"] += 1
                     if len(ext) > 0:
-                        size = sum(f.stat().st_size for f in file.glob('**/*') if f.is_file() )
+                        size = sum(
+                            f.stat().st_size for f in file.glob("**/*") if f.is_file()
+                        )
                 elif os.path.isfile(file):
                     fs["file_count"] += 1
                     size = os.path.getsize(file)
@@ -501,43 +716,48 @@ class FileOps:
             fs["file_types"] = len(fs["file_ext"])
             if fs["file_count"] > 0:
                 fs["mean_size"] = fs["total_size"] / fs["file_count"]
-            if self.verbose:
-                print("Directory: " + crayons.blue(dirname, bold=True))
-                print("  Files         : " + crayons.cyan(fs["file_count"]))
-                print("  Directories   : " + crayons.cyan(fs["dir_count"]))
-                print("  Total size    : " + file_size_str(fs["total_size"], style="mono"))
-                print("  Max size      : " + file_size_str(fs["max_size"], style="mono"))
-                print("  Average size  : " + file_size_str(fs["mean_size"], style="mono"))
-                print(crayons.white("  File types    : ", bold=True) + crayons.cyan(fs["file_types"]))
-                listext = sorted(fs["file_ext"].items(), key=lambda x: x[1][1], reverse=True)
-                ccount, csize = 0, 0
-                minsize = 0.95 * (fs["total_size"])
-                mincount = 0.95 * (fs["file_count"])
-                maxcount = min(64, 0.95 * fs["file_types"])
-                exts, qtys, sizes = [], [], []
-                for i, el in enumerate(listext):
-                    if (ccount < mincount or csize < minsize) and i < maxcount:
-                        exts.append(el[0][:15])
-                        qtys.append(el[1][0])
-                        sizes.append(el[1][1])
-                    ccount += el[1][0]
-                    csize += el[1][1]
-                cs = sorted(zip(exts, qtys, sizes), key=lambda x: x[1], reverse=True)
-                style = "colour" if colour_list else "mono"
-                for e, q, s, c in zip(exts, qtys, sizes, cs):
-                    print(colour_list_str(e, q, s, c[0], c[1], c[2], style))
-                listgroup = sorted(fs["file_groups"].items(), key=lambda x: x[1][1], reverse=True)
-                print(crayons.white("   File groups  :", bold=True))
-                exts, qtys, sizes = [], [], []
-                for el in listgroup:
+            print("Directory: " + crayons.blue(dirname, bold=True))
+            print("  Files         : " + crayons.cyan(fs["file_count"]))
+            print("  Directories   : " + crayons.cyan(fs["dir_count"]))
+            print("  Total size    : " + file_size_str(fs["total_size"], style="mono"))
+            print("  Max size      : " + file_size_str(fs["max_size"], style="mono"))
+            print("  Average size  : " + file_size_str(fs["mean_size"], style="mono"))
+            print(
+                crayons.white("  File types    : ", bold=True)
+                + crayons.cyan(fs["file_types"])
+            )
+            listext = sorted(
+                fs["file_ext"].items(), key=lambda x: x[1][1], reverse=True
+            )
+            ccount, csize = 0, 0
+            minsize = 0.95 * (fs["total_size"])
+            mincount = 0.95 * (fs["file_count"])
+            maxcount = min(64, 0.95 * fs["file_types"])
+            exts, qtys, sizes = [], [], []
+            for i, el in enumerate(listext):
+                if (ccount < mincount or csize < minsize) and i < maxcount:
                     exts.append(el[0][:15])
                     qtys.append(el[1][0])
                     sizes.append(el[1][1])
-                cs = sorted(zip(exts, qtys, sizes), key=lambda x: x[1], reverse=True)
-                for e, q, s, c in zip(exts, qtys, sizes, cs):
-                    print(colour_list_str(e, q, s, c[0], c[1], c[2], style))
+                ccount += el[1][0]
+                csize += el[1][1]
+            cs = sorted(zip(exts, qtys, sizes), key=lambda x: x[1], reverse=True)
+            style = "colour" if colour_list else "mono"
+            for e, q, s, c in zip(exts, qtys, sizes, cs):
+                print(colour_list_str(e, q, s, c[0], c[1], c[2], style))
+            listgroup = sorted(
+                fs["file_groups"].items(), key=lambda x: x[1][1], reverse=True
+            )
+            print(crayons.white("   File groups  :", bold=True))
+            exts, qtys, sizes = [], [], []
+            for el in listgroup:
+                exts.append(el[0][:15])
+                qtys.append(el[1][0])
+                sizes.append(el[1][1])
+            cs = sorted(zip(exts, qtys, sizes), key=lambda x: x[1], reverse=True)
+            for e, q, s, c in zip(exts, qtys, sizes, cs):
+                print(colour_list_str(e, q, s, c[0], c[1], c[2], style))
 
-            return fs
         elif self.verbose:
             self.colprint("Directory ", dirname, " does not exist", "red")
         return False
