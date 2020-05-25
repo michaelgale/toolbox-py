@@ -21,8 +21,7 @@ Functionality
 **Parameter Container Class**
 
 - ``Params`` class to hold parameters as attributes in a class with dotted access. Can be initialized with an input YAML file with nested hierarchy.
-- ``apply_params`` merges object dictionaries and optional local parameters stored in a dictionary called "PARAMS".  This allows parameter data for an object to be inheritable, able to
-    be easily passed into instantiation, and be attached as an attribute of the object.
+- ``apply_params`` merges object dictionaries and optional local parameters stored in a dictionary called "PARAMS".  This allows parameter data for an object to be inheritable, able to be easily passed into instantiation, and be attached as an attribute of the object.
 
 **Foldercheck utility**
 
