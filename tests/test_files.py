@@ -31,6 +31,7 @@ fo = FileOps(simulate=True, verbose=VERBOSE, overwrite=False)
 fo.verbose_errors_only = False
 fo.safe_overwrite = False
 
+
 def test_fileops():
     res = fo.get_file_list("./testfiles", recursive=True)
     assert res
@@ -170,4 +171,3 @@ def test_real_dir():
     assert res
     res = fs.remove_dir("./testfiles/newdir")
     assert not res
-

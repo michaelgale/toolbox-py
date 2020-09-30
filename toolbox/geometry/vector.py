@@ -30,6 +30,7 @@ from math import sin, cos, radians, sqrt, atan, degrees, atan2, hypot
 from numbers import Number
 from functools import reduce
 
+
 class MatrixError(Exception):
     pass
 

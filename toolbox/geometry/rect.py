@@ -31,6 +31,7 @@ from numbers import Number
 from functools import reduce
 from .point import Point
 
+
 class Rect:
     """ 2D Rectangle class """
 

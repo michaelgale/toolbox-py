@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# Copyright (C) 2018  Fx Bricks Inc.
+# Copyright (C) 2020  Michael Gale
 # This file is part of the legocad python module.
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation
@@ -71,6 +71,7 @@ def file_size_str(size, style=None):
     else:
         return crayons.normal("%10s" % (s))
 
+
 def _full_path(file):
     """ Returns the fully expanded path of a file"""
     if "~" in file:
@@ -83,6 +84,7 @@ def _split_path(file):
     if os.path.isdir(file):
         return _full_path(file), None
     return os.path.split(_full_path(file))
+
 
 def colour_path_str(file):
     fp = _full_path(file)
@@ -106,4 +108,3 @@ def colour_path_str(file):
         else:
             s.append(str(crayons.cyan(file, bold=True)))
     return "".join(s)
-

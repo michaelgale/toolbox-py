@@ -13,12 +13,7 @@ from toolbox import *
 
 def test_apply_params():
     class TestParams(object):
-        PARAMS = {
-            "abc": None,
-            "defg": False,
-            "hijk": 0.0,
-            "lmno": "My Params",
-        }
+        PARAMS = {"abc": None, "defg": False, "hijk": 0.0, "lmno": "My Params"}
 
         def __init__(self, **kwargs):
             apply_params(self, kwargs, locals())
@@ -32,6 +27,7 @@ def test_apply_params():
     assert not tc.defg
     assert tc.hijk == 0.0
     assert tc.lmno == "My Params"
+
 
 def test_yaml_params():
     tp = Params(yml="test_params.yml")

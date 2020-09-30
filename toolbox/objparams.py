@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 #
-# Copyright (C) 2018  Fx Bricks Inc.
+# Copyright (C) 2020  Michael Gale
 # This file is part of the legocad python module.
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation
@@ -35,6 +35,7 @@ from metayaml import read
 # Dictionary processing based on 3b1b's manim library
 #
 # caller should use apply_params(self, kwargs, locals())
+
 
 def get_all_descendent_classes(Class):
     awaiting_review = [Class]
@@ -108,9 +109,7 @@ def soft_dict_update(d1, d2):
 
 
 def digest_locals(obj, keys=None):
-    caller_locals = filtered_locals(
-        inspect.currentframe().f_back.f_locals
-    )
+    caller_locals = filtered_locals(inspect.currentframe().f_back.f_locals)
     if keys is None:
         keys = list(caller_locals.keys())
     for key in keys:
@@ -128,19 +127,26 @@ class Params(dict):
         strings unchanged and percentages in their decimal form.
         """
 
-        match = re.search(r'([\d.]+)\s*(\S*)', s)
-        if match is None or match.group(2) not in ['in', 'mm', '%', "studs", "inch", "pt"]:
+        match = re.search(r"([\d.]+)\s*(\S*)", s)
+        if match is None or match.group(2) not in [
+            "in",
+            "mm",
+            "%",
+            "studs",
+            "inch",
+            "pt",
+        ]:
             return s
 
         val, unit = match.groups()
 
         val = float(val)
-        if unit == '%':
-            return val/100
+        if unit == "%":
+            return val / 100
 
         if baseunit is None:
             return val
- 
+
         if baseunit == "mm":
             if unit == "studs":
                 return val * 8.0
@@ -172,7 +178,6 @@ class Params(dict):
 
         return val
 
-
     def __init__(self, yml=None, *, obj=None, baseunit="mm", **kwargs):
         """Given a YAML file that's a toplevel list or dict,
         this turns it into nested Params all the way down.
@@ -197,4 +202,3 @@ class Params(dict):
                 obj[k] = Params(obj=v, baseunit=baseunit, **kwargs)
 
         self.update(obj)
-
