@@ -23,6 +23,12 @@ Functionality
 - ``Params`` class to hold parameters as attributes in a class with dotted access. Can be initialized with an input YAML file with nested hierarchy.
 - ``apply_params`` merges object dictionaries and optional local parameters stored in a dictionary called "PARAMS".  This allows parameter data for an object to be inheritable, able to be easily passed into instantiation, and be attached as an attribute of the object.
 
+**Geometry Classes**
+
+- ``Vector``, ``Vector2D``, ``Matrix`` classes for simple linear algrebra operations with vectors
+- ``Point`` - general purpose 2D point class
+- ``Rect`` - general purpose 2D rectangle class and utility functions
+
 **Foldercheck utility**
 
 Simple command line utility to summarize the contents of a folder tree. Summary includes file count, file size, and grouped categories of files by both extension and category (e.g. images, source code, etc.)
@@ -63,7 +69,8 @@ Requirements
 ^^^^^^^^^^^^
 
 * Python 3.6+
-* pyyaml
+* metayaml
+* crayons
 
 
 Authors
