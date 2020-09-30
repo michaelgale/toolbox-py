@@ -59,7 +59,7 @@ setuptools.setup(
         'License :: OSI Approved :: MIT License'
     ],
     install_requires=[
-        'jinja2',
+        'jinja2 >= 2.10, <3',
         'metayaml',
         "crayons",
     ],
