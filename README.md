@@ -27,7 +27,7 @@ A general purpose collection of useful python tools and utility functions.
 
 **Geometry Classes**
 
-- `Vector`, `Vector2D`, `Matrix` classes for simple linear algrebra operations with vectors
+- `Vector`, `Vector2D`, `Matrix` classes for simple linear algebra operations with vectors
 - `Point` - general purpose 2D point class
 - `Rect` - general purpose 2D rectangle class and utility functions
 
