@@ -4,6 +4,8 @@
 ![https://github.com/michaelgale/toolbox-py/blob/master/LICENSE](https://img.shields.io/badge/license-MIT-blue.svg)
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>  
 
+![https://travis-ci.org/michaelgale/toolbox-py](https://travis-ci.com/michaelgale/toolbox-py.svg?branch=master)
+
 
 A general purpose collection of useful python tools and utility functions.
 
@@ -66,6 +68,7 @@ An example of the package can be seen below
 ## Requirements
 
 * Python 3.6+
+* jinja2 
 * metayaml
 * crayons
 
