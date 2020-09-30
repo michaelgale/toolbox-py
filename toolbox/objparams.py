@@ -129,7 +129,7 @@ class Params(dict):
         """
 
         match = re.search(r'([\d.]+)\s*(\S*)', s)
-        if match is None or match.group(2) not in ['in', 'mm', '%', "studs"]:
+        if match is None or match.group(2) not in ['in', 'mm', '%', "studs", "inch", "pt"]:
             return s
 
         val, unit = match.groups()
@@ -140,30 +140,40 @@ class Params(dict):
 
         if baseunit is None:
             return val
-
-        if unit == 'mm' and baseunit == "studs":
-            return val/8.0
-
-        if unit == "in" and baseunit == "studs":
-            return val * 25.4 / 8.0
-
-        if unit == 'in' and baseunit == "mm":
-            return val * 25.4
-
-        if unit == "studs" and baseunit == "mm":
-            return val * 8.0
-
-        if unit == "studs" and baseunit == "in":
-            return val * 8.0 / 25.4
-
-        if unit == "mm" and baseunit == "in":
-            return val / 25.4
-
+ 
+        if baseunit == "mm":
+            if unit == "studs":
+                return val * 8.0
+            elif unit == "in" or unit == "inch":
+                return val * 25.4
+            elif unit == "pt":
+                return val * 25.4 / 72.0
+        elif baseunit == "studs":
+            if unit == "mm":
+                return val / 8.0
+            elif unit == "in" or unit == "inch":
+                return val * 25.4 / 8.0
+            elif unit == "pt":
+                return val / 72.0 * 25.4 / 8.0
+        elif baseunit == "in" or baseunit == "inch":
+            if unit == "mm":
+                return val / 25.4
+            elif unit == "studs":
+                return val * 8.0 / 25.4
+            elif unit == "pt":
+                return val / 72.0
+        elif baseunit == "pt":
+            if unit == "mm":
+                return val / 25.4 * 72.0
+            elif unit == "studs":
+                return val * 8.0 / 25.4 * 72.0
+            elif unit == "in" or unit == "inch":
+                return val * 72.0
 
         return val
 
 
-    def __init__(self, yml=None, *, obj=None, **kwargs):
+    def __init__(self, yml=None, *, obj=None, baseunit="mm", **kwargs):
         """Given a YAML file that's a toplevel list or dict,
         this turns it into nested Params all the way down.
 
@@ -181,9 +191,10 @@ class Params(dict):
 
         for k, v in list(obj.items()):
             if isinstance(v, str):
-                obj[k] = self.__convert(v, **kwargs)
+                obj[k] = self.__convert(v, baseunit=baseunit, **kwargs)
 
             if isinstance(v, dict):
-                obj[k] = Params(obj=v, **kwargs)
+                obj[k] = Params(obj=v, baseunit=baseunit, **kwargs)
 
         self.update(obj)
+
