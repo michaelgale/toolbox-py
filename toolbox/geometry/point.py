@@ -63,6 +63,17 @@ class Point:
         """Point(x1/x2, y1/y2)"""
         return Point(self.x / scalar, self.y / scalar)
 
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return self.x if key == 0 else self.y
+
+    def __setitem__(self, key, value):
+        if isinstance(key, int):
+            if key == 0:
+                self.x = value
+            else:
+                self.y = value
+
     def __str__(self):
         if isinstance(self.x, float):
             return "(%.2f, %.2f)" % (self.x, self.y)

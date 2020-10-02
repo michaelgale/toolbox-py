@@ -31,6 +31,14 @@ def test_point_rotate():
     assert b.y == 1
 
 
+def test_point_idx():
+    a = Point(3, 5)
+    assert a.x == 3
+    assert a[0] == 3
+    assert a.y == 5
+    assert a[1] == 5
+
+
 def test_grid_2d():
     pts = grid_points_2d(10, 20, 3)
     assert len(pts) == 9

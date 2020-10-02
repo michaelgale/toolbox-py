@@ -16,6 +16,6 @@ from .datautils import *
 from .scripts import foldercheck
 from .niceprint import file_size_str, colour_path_str
 
-from .geometry.vector import Vector, Vector2D, Matrix, euler_to_rot_matrix, safe_vector
+from .geometry.vector import *
 from .geometry.point import Point, grid_points_2d, grid_points_at_height, points2d_at_height
 from .geometry.rect import Rect
