@@ -64,3 +64,16 @@ def test_grid_2d():
     assert pts[3] == (0, 2, 3)
     assert pts[4] == (10, -2, 3)
     assert pts[5] == (10, 2, 3)
+
+
+def test_centroid():
+    pts = [(1, 1), (2, 2), (4, 3), (3, 0)]
+    x, y = centroid_of_points(pts)
+    assert x == 2.5
+    assert y == 1.5
+
+    pts = [(0, 1, 1), (2, 0, 2), (4, 3, 0), (-1, 3, 0)]
+    x, y, z = centroid_of_points(pts)
+    assert x == 1.25
+    assert y == 1.75
+    assert z == 0.75

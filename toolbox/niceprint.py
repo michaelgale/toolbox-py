@@ -52,9 +52,9 @@ mono_gradient = [
 
 
 def file_size_str(size, style=None):
-    """ Prints a file size in human readable units
+    """Prints a file size in human readable units
     size is assumed to be in bytes
-    style is optional and can be "colour" or "mono" for gradient of colour """
+    style is optional and can be "colour" or "mono" for gradient of colour"""
     if size > 1e9:
         s = "%.2f GB" % (size / 1e9)
     elif size > 1e6:

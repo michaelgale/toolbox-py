@@ -355,7 +355,7 @@ def colour_list_str(t1, q1, s1, t2, q2, s2, style="colour"):
 
 
 class FileOps:
-    """A convenience access class to perform file system 
+    """A convenience access class to perform file system
     operations such as renaming, moving, or copying files.
     This class allows all operations to be "masked" for simulation
     so that file operations are non-destructive and can be
@@ -380,9 +380,9 @@ class FileOps:
         return True
 
     def choose_safe_filename(self, file):
-        """ Checks if a file already exists and returns a alternative
+        """Checks if a file already exists and returns a alternative
         filename with a suffix "-1", "-2", ... until a unique name is found,
-        otherwise it will simply return the file name as is """
+        otherwise it will simply return the file name as is"""
         fp = full_path(file)
         if os.path.isfile(fp):
             d, f1 = split_path(fp)
@@ -432,10 +432,10 @@ class FileOps:
         return True
 
     def rename_file(self, src, dest):
-        """ Renames supplied file src with name dest. 
+        """Renames supplied file src with name dest.
         If renamed file already exists, it will ignore the request
         unless overwrite is True.  Returns True if the operation is
-        performed and False otherwise. """
+        performed and False otherwise."""
         if not self.verify_file(src):
             return False
         srcdir, srcname = split_path(src)
@@ -459,10 +459,10 @@ class FileOps:
         return False
 
     def move_file(self, src, dest):
-        """ Moves supplied file src to new location specified with dest. 
+        """Moves supplied file src to new location specified with dest.
         If moved file already exists, it will ignore the request
         unless overwrite or safe_overwrite is True.  Returns True if the
-        operation is performed and False otherwise. """
+        operation is performed and False otherwise."""
         if not self.verify_file(src):
             return False
         srcdir, srcname = split_path(src)
@@ -484,10 +484,10 @@ class FileOps:
         return False
 
     def copy_file(self, src, dest):
-        """ Copies supplied file src to new location specified with dest.
+        """Copies supplied file src to new location specified with dest.
         If copied file already exists, it will ignore the request
-        unless overwrite or safe_overwrite is True.  Returns True if 
-        the operation is performed and False otherwise. """
+        unless overwrite or safe_overwrite is True.  Returns True if
+        the operation is performed and False otherwise."""
         if not self.verify_file(src):
             return False
         srcdir, srcname = split_path(src)
@@ -544,10 +544,10 @@ class FileOps:
         return False
 
     def remove_dir(self, name, remove_all=False):
-        """ Removes a directory.  If remove_all is True, then it
+        """Removes a directory.  If remove_all is True, then it
         will also remove all of the directory's content including
-        files and subdirectories.  Otherwise, we assume we are 
-        removing an empty directory """
+        files and subdirectories.  Otherwise, we assume we are
+        removing an empty directory"""
         if not self.verify_dir_not_file(name):
             return False
         dirname = full_path(name)
@@ -574,7 +574,7 @@ class FileOps:
         return False
 
     def remove_files_from_dir(self, name, remove_subdir=False):
-        """ Removes all files for a directory.  If remove_subdir is 
+        """Removes all files for a directory.  If remove_subdir is
         True, then it also removes all subdirectories (and their contents)
         in addition to files.  The resulting empty directory will still
         exist; the remove_dir method can be used to remove the directory

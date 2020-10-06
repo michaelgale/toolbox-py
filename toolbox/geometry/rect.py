@@ -207,8 +207,8 @@ class Rect:
         self.height = abs(y2 - y1)
 
     def bounding_rect(self, pts):
-        """Makes a bounding rect from the extents of a list of points 
-        or a list of rects """
+        """Makes a bounding rect from the extents of a list of points
+        or a list of rects"""
         if len(pts) == 0:
             return
         bx = []
@@ -250,9 +250,9 @@ class Rect:
         self.height = height
 
     def set_size_anchored(self, width, height, anchor_pt="centre centre"):
-        """Sets a new size for the rectangle and optionally anchors the 
+        """Sets a new size for the rectangle and optionally anchors the
         rectangle to any one of 10 points specified with a string containing
-        anchor point description, e.g. 'top left', 'right', 'bottom centre' """
+        anchor point description, e.g. 'top left', 'right', 'bottom centre'"""
         if "left" in anchor_pt:
             x1 = self.left
             x2 = self.left + width
@@ -276,7 +276,7 @@ class Rect:
         self.set_points((x1, y1), (x2, y2))
 
     def anchor_to_pt(self, rect, from_pt="centre centre", to_pt="centre centre"):
-        """Moves a rectangle from its anchor point to another rectangle's 
+        """Moves a rectangle from its anchor point to another rectangle's
         anchor point. Example: "top right" to "bottom left" """
         x, y = rect.get_anchor_pt(to_pt)
         if "left" in from_pt:
@@ -314,7 +314,7 @@ class Rect:
         self.anchor_to_pt(rect, anchor_pt, anchor_pt)
 
     def anchor_with_constraint(self, rect, constraint):
-        """Moves a rectangle from its anchor point to another rectangle's 
+        """Moves a rectangle from its anchor point to another rectangle's
         anchor point. Example: "top right to bottom left" or "below" """
         c = constraint.lower()
         if c == "below":

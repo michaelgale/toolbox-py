@@ -27,7 +27,7 @@ import re
 
 
 def str_constraint(constraint, check_value, tolerance=0.1):
-    """ Validates a numeric constraint described by a string.  The string
+    """Validates a numeric constraint described by a string.  The string
     can specify fixed value constraints such as "0.0" or range constraints
     such as "<3.0" or ">=10.0"
     """
@@ -55,7 +55,7 @@ def str_constraint(constraint, check_value, tolerance=0.1):
 
 
 def is_valid_value(value, value_constraints, tolerance=0.1):
-    """ Validates a length value against one or more constraints.  The
+    """Validates a length value against one or more constraints.  The
     constraints are specified either as fixed values or with strings which
     specify more complex criteria such as ">2.0".  Multiple constraints are
     specified as a list such as [">0.0", "<15.0"]
@@ -77,10 +77,10 @@ def is_valid_value(value, value_constraints, tolerance=0.1):
 def are_words_in_word_list(
     words, word_list, case_sensitive=False, get_score=False, all_must_match=True
 ):
-    """ Checks if word(s) are contained in another word list.
+    """Checks if word(s) are contained in another word list.
     The search can be performed with or without case sensitivity.
     The check words can contain wildcards, e.g. "abc*" to allow
-    a wider range of matches against the word list. """
+    a wider range of matches against the word list."""
     if not isinstance(words, list):
         check_words = [words]
     else:
@@ -124,9 +124,9 @@ def n_grams(text, n, as_list=True):
 
 
 def parse_value(text, spec):
-    """ Finds a value embedded in a formatted string (spec) in the form of
+    """Finds a value embedded in a formatted string (spec) in the form of
     'placeholder placeholder2 %v placeholder3' where placeholder text
-    helps locate the desired value denoted by %v """
+    helps locate the desired value denoted by %v"""
     slen = len(spec.split())
     value = None
     if spec == "$":

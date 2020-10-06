@@ -209,7 +209,7 @@ class Vector(object):
     """ a Vector in 3D"""
 
     def __init__(self, x, y=None, z=None):
-        if isinstance(x, tuple):
+        if isinstance(x, (tuple, list)):
             self.x = x[0]
             self.y = x[1]
             self.z = x[2]
@@ -275,6 +275,26 @@ class Vector(object):
         if isinstance(other, Number):
             return Vector(self.x / other, self.y / other, self.z / other)
         raise ValueError("Cannot divide %s with %s" % (self.__class__, type(other)))
+
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            if key == 0:
+                return self.x
+            elif key == 1:
+                return self.y
+            return self.z
+
+    def __setitem__(self, key, value):
+        if isinstance(key, int):
+            if key == 0:
+                self.x = value
+            elif key == 1:
+                self.y = value
+            else:
+                self.z = value
+
+    def as_tuple(self):
+        return (self.x, self.y, self.z)
 
     def copy(self):
         """vector = copy(self)
