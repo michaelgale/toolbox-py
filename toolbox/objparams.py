@@ -29,6 +29,7 @@ import re
 import yaml
 import inspect
 import itertools as it
+from collections import OrderedDict
 from metayaml import read
 
 
@@ -116,67 +117,72 @@ def digest_locals(obj, keys=None):
         setattr(obj, key, caller_locals[key])
 
 
+def convert_value_with_unit(s, baseunit="mm"):
+    """Handle conversion of number strings ending with "in", "mm", "studs" or "%".
+    If a baseunit is provided, force values for in or mm to that unit;
+    if not provided, return the float without scaling. Always return non-number
+    strings unchanged and percentages in their decimal form.
+    """
+    if not isinstance(s, str):
+        return s
+    match = re.search(r"([\d.]+)\s*(\S*)", s)
+    if match is None or match.group(2) not in [
+        "in",
+        "mm",
+        "%",
+        "studs",
+        "inch",
+        "pt",
+    ]:
+        return s
+
+    val, unit = match.groups()
+
+    val = float(val)
+    if unit == "%":
+        return val / 100
+
+    if baseunit is None:
+        return val
+
+    if baseunit == "mm":
+        if unit == "studs":
+            return val * 8.0
+        elif unit == "in" or unit == "inch":
+            return val * 25.4
+        elif unit == "pt":
+            return val * 25.4 / 72.0
+    elif baseunit == "studs":
+        if unit == "mm":
+            return val / 8.0
+        elif unit == "in" or unit == "inch":
+            return val * 25.4 / 8.0
+        elif unit == "pt":
+            return val / 72.0 * 25.4 / 8.0
+    elif baseunit == "in" or baseunit == "inch":
+        if unit == "mm":
+            return val / 25.4
+        elif unit == "studs":
+            return val * 8.0 / 25.4
+        elif unit == "pt":
+            return val / 72.0
+    elif baseunit == "pt":
+        if unit == "mm":
+            return val / 25.4 * 72.0
+        elif unit == "studs":
+            return val * 8.0 / 25.4 * 72.0
+        elif unit == "in" or unit == "inch":
+            return val * 72.0
+
+    return val
+
+
 class Params(dict):
     """A deserialization of a YAML file for . and [] access
     based on https://github.com/swolebro/caddyshack"""
 
     def __convert(self, s, baseunit="mm", **kwargs):
-        """Handle conversion of number strings ending with "in", "mm", "studs" or "%".
-        If a baseunit is provided, force values for in or mm to that unit;
-        if not provided, return the float without scaling. Always return non-number
-        strings unchanged and percentages in their decimal form.
-        """
-
-        match = re.search(r"([\d.]+)\s*(\S*)", s)
-        if match is None or match.group(2) not in [
-            "in",
-            "mm",
-            "%",
-            "studs",
-            "inch",
-            "pt",
-        ]:
-            return s
-
-        val, unit = match.groups()
-
-        val = float(val)
-        if unit == "%":
-            return val / 100
-
-        if baseunit is None:
-            return val
-
-        if baseunit == "mm":
-            if unit == "studs":
-                return val * 8.0
-            elif unit == "in" or unit == "inch":
-                return val * 25.4
-            elif unit == "pt":
-                return val * 25.4 / 72.0
-        elif baseunit == "studs":
-            if unit == "mm":
-                return val / 8.0
-            elif unit == "in" or unit == "inch":
-                return val * 25.4 / 8.0
-            elif unit == "pt":
-                return val / 72.0 * 25.4 / 8.0
-        elif baseunit == "in" or baseunit == "inch":
-            if unit == "mm":
-                return val / 25.4
-            elif unit == "studs":
-                return val * 8.0 / 25.4
-            elif unit == "pt":
-                return val / 72.0
-        elif baseunit == "pt":
-            if unit == "mm":
-                return val / 25.4 * 72.0
-            elif unit == "studs":
-                return val * 8.0 / 25.4 * 72.0
-            elif unit == "in" or unit == "inch":
-                return val * 72.0
-
-        return val
+        return convert_value_with_unit(s, baseunit=baseunit)
 
     def __init__(self, yml=None, *, obj=None, baseunit="mm", **kwargs):
         """Given a YAML file that's a toplevel list or dict,

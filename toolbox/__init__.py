@@ -12,7 +12,7 @@ VERSION = __project__ + "-" + __version__
 script_dir = os.path.dirname(__file__)
 
 from .objparams import apply_params
-from .objparams import Params
+from .objparams import Params, convert_value_with_unit
 from .files import SuppressStdoutStderr, full_path, split_path, FileOps
 from .datautils import *
 from .scripts import foldercheck
