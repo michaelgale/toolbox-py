@@ -24,6 +24,7 @@
 # Nice (pretty) print helpers
 #
 
+import datetime
 import sys, os
 import os.path
 import crayons
@@ -108,3 +109,58 @@ def colour_path_str(file):
         else:
             s.append(str(crayons.cyan(file, bold=True)))
     return "".join(s)
+
+
+def progress_bar(
+    iteration,
+    total,
+    prefix="",
+    suffix="",
+    decimals=1,
+    length=100,
+    fill="█",
+    printEnd="\r",
+):
+    """
+    Call in a loop to create terminal progress bar
+    @params:
+        iteration   - Required  : current iteration (Int)
+        total       - Required  : total iterations (Int)
+        prefix      - Optional  : prefix string (Str)
+        suffix      - Optional  : suffix string (Str)
+        decimals    - Optional  : positive number of decimals in percent complete (Int)
+        length      - Optional  : character length of bar (Int)
+        fill        - Optional  : bar fill character (Str)
+        printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
+    """
+    percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = fill * filledLength + "-" * (length - filledLength)
+    print(f"\r{prefix} |{bar}| {percent}% {suffix}", end=printEnd)
+    # Print New Line on Complete
+    if iteration == total:
+        print()
+
+
+init_time = datetime.datetime.now()
+last_time = datetime.datetime.now()
+
+
+def logmsg(msg, prefix="", level=2, log_output=True, log_level=0):
+    """Generic logging message to the console with elaspsed time prefix."""
+    if not log_output or log_level < level:
+        return
+
+    global init_time
+    global last_time
+    tnow = datetime.datetime.now()
+    tdiff = tnow - init_time
+    tstr = str(tdiff)
+    s = []
+    s.append(str(crayons.blue("%s" % (tstr[2:-3]), bold=False)))
+    if len(prefix) > 0:
+        s.append(" : %s: " % (prefix))
+    else:
+        s.append(" : ")
+    s.append(msg)
+    print("".join(s))

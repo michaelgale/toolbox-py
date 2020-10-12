@@ -16,7 +16,7 @@ from .objparams import Params, convert_value_with_unit
 from .files import SuppressStdoutStderr, full_path, split_path, split_filename, FileOps
 from .datautils import *
 from .scripts import foldercheck
-from .niceprint import file_size_str, colour_path_str
+from .niceprint import file_size_str, colour_path_str, progress_bar, logmsg
 
 from .geometry.vector import *
 from .geometry.point import (
