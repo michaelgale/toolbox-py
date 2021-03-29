@@ -47,7 +47,7 @@ colour_gradient = [
 mono_gradient = [
     (1e9, crayons.white, True),
     (2e8, crayons.white, False),
-    (5e7, crayons.white, False),
+    (5e7, crayons.normal, False),
     (0, crayons.black, True),
 ]
 
@@ -70,7 +70,7 @@ def file_size_str(size, style=None):
             if size > thr:
                 return c("%10s" % (s), bold=b)
     else:
-        return crayons.normal("%10s" % (s))
+        return crayons.white("%10s" % (s))
 
 
 def _full_path(file):

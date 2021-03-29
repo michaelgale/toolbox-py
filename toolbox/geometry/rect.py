@@ -340,6 +340,28 @@ class Rect:
             if len(c) == 2:
                 self.anchor_to_pt(rect, from_pt=c[0], to_pt=c[1])
 
+    def shove_with_constraint(self, other, constraint):
+        """Shoves a rectangle if it violates an overlapping constraint from
+        another rectangle. Constraints can be: 
+        - left_bound, right_bound, top_bound, bottom_bound
+        """
+        c = constraint.lower().split("_")
+        if "bound" not in c: 
+            return
+        if c[0] == "left":
+            if self.left - other.right < 0:
+                self.anchor_to_pt(other, from_pt="left", to_pt="right")
+        elif c[0] == "right":
+            if other.left - self.right < 0:
+                self.anchor_to_pt(other, from_pt="right", to_pt="left")
+        elif c[0] == "top":
+            if other.bottom - self.top < 0:
+                self.anchor_to_pt(other, from_pt="top", to_pt="bottom")
+        elif c[0] == "bottom":
+            if self.bottom - other.top < 0:
+                self.anchor_to_pt(other, from_pt="bottom", to_pt="top")
+        
+
     def contains(self, pt):
         """Return true if a point is inside the rectangle."""
         x, y = self._xy_from_pt(pt)
@@ -395,6 +417,7 @@ class Rect:
         vert_align="top",
         horz_align="left",
         auto_adjust=True,
+        align_cols=False,
     ):
         def dict_idx(row, col):
             return "%d_%d" % (row, col)
@@ -512,6 +535,12 @@ class Rect:
         rows += 1
         cols += 1
         new_rects = []
+        col_widths = [0] * cols
+        for row in range(rows):
+            for col in range(cols):
+                if dict_idx(row, col) in rd:
+                    col_widths[col] = max(col_widths[col], rd[dict_idx(row, col)].width)
+
         if row_wise:
             for row in range(rows):
                 rh = 0
@@ -521,10 +550,17 @@ class Rect:
                 for col in range(cols):
                     if dict_idx(row, col) in rd:
                         r = copy.copy(rd[dict_idx(row, col)])
+                        if col == 0:
+                            cx = r.left
                         if vert_align == "bottom":
-                            r.move_bottom_left_to((r.left, r.top - rh))
+                            r.move_bottom_left_to((cx, r.top - rh))
                         elif vert_align == "centre":
-                            r.move_top_left_to((r.left, r.top - rh / 2 + r.height / 2))
+                            r.move_top_left_to((cx, r.top - rh / 2 + r.height / 2))
+                        else:
+                            r.move_top_left_to((cx, r.top))
+                        if align_cols:
+                            r.set_size_anchored(col_widths[col], r.height, "left")
+                        cx += r.width
                         new_rects.append(r)
         else:
             for col in range(cols):
@@ -537,8 +573,12 @@ class Rect:
                         r = copy.copy(rd[dict_idx(row, col)])
                         if horz_align == "right":
                             r.move_top_left_to((r.left + cw - r.width, r.top))
+                            # r.set_size_anchored(col_widths[col], r.height, "right")
                         elif horz_align == "centre":
                             r.move_top_left_to((r.left + cw / 2 - r.width / 2, r.top))
+                            # r.set_size_anchored(col_widths[col], r.height, "centre")
+                        # else:
+                            # r.set_size_anchored(col_widths[col], r.height, "left")
                         new_rects.append(r)
 
         return new_rects

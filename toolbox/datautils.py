@@ -123,10 +123,13 @@ def n_grams(text, n, as_list=True):
     return w
 
 
-def parse_value(text, spec):
+def parse_value(text, spec, max_value=None):
     """Finds a value embedded in a formatted string (spec) in the form of
     'placeholder placeholder2 %v placeholder3' where placeholder text
     helps locate the desired value denoted by %v"""
+    text = text.replace("|", "")
+    text = text.replace("]", "")
+    text = text.replace("[", "")
     slen = len(spec.split())
     value = None
     if spec == "$":
@@ -136,7 +139,13 @@ def parse_value(text, spec):
                     x = t.replace("$", "")
                     try:
                         value = float(x)
-                        return value
+                        if max_value is not None:
+                            if value <= max_value:
+                                return value
+                            else:
+                                return None
+                        else:
+                            return value
                     except:
                         pass
     for phrase in n_grams(text, slen, as_list=True):

@@ -355,6 +355,24 @@ class Vector(object):
             return False
         return True
 
+    def is_colinear_with(self, other, tolerance=1e-3):
+        """Returns true if two coordinates are the same between
+        two vectors and are co-aligned."""
+        if not isinstance(other, Vector):
+            return False
+        matched_axis = 0
+        if abs(self.x - other.x) <= tolerance:
+            matched_axis += 1
+        if abs(self.y - other.y) <= tolerance:
+            matched_axis += 1
+        if abs(self.z - other.z) <= tolerance:
+            matched_axis += 1
+        return matched_axis
+        # if matched_axis == 2:
+        #     print("MATCHED ", self, other)
+        #     return True
+        # return False
+
 
 class Vector2D(object):
     """ a Vector in 2D """

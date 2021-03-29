@@ -723,7 +723,7 @@ class FileOps:
             print("  Max size      : " + file_size_str(fs["max_size"], style="mono"))
             print("  Average size  : " + file_size_str(fs["mean_size"], style="mono"))
             print(
-                crayons.white("  File types    : ", bold=True)
+                crayons.normal("  File types    : ", bold=True)
                 + crayons.cyan(fs["file_types"])
             )
             listext = sorted(
@@ -748,7 +748,7 @@ class FileOps:
             listgroup = sorted(
                 fs["file_groups"].items(), key=lambda x: x[1][1], reverse=True
             )
-            print(crayons.white("   File groups  :", bold=True))
+            print(crayons.normal("   File groups  :", bold=True))
             exts, qtys, sizes = [], [], []
             for el in listgroup:
                 exts.append(el[0][:15])
