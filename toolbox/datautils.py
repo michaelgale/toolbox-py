@@ -110,7 +110,7 @@ def are_words_in_word_list(
 
 
 def n_grams(text, n, as_list=True):
-    """ Splits text into consecutive n-grams, e.g. pairwise, triples, etc. """
+    """Splits text into consecutive n-grams, e.g. pairwise, triples, etc."""
     w = text.split()
     if len(w) >= n:
         n_grams = [w[i : i + n] for i in range(len(w) - n + 1)]
@@ -167,7 +167,7 @@ def parse_value(text, spec, max_value=None):
 
 
 def is_phrase_in_text(phrase_items, text, case_sensitive=False):
-    """ Checks to see if multi word phrase(s) is contained in supplied text """
+    """Checks to see if multi word phrase(s) is contained in supplied text"""
     if isinstance(phrase_items, list):
         phrases = phrase_items
     else:
@@ -193,7 +193,7 @@ def is_phrase_in_text(phrase_items, text, case_sensitive=False):
 
 
 def words_and_phrases(text):
-    """ splits a list containing single words and/or multi-word phrases """
+    """splits a list containing single words and/or multi-word phrases"""
     words = []
     phrases = []
     for t in text:
@@ -205,7 +205,7 @@ def words_and_phrases(text):
 
 
 def get_email_addresses(text):
-    """ finds email addresses in text and return as a list """
+    """finds email addresses in text and return as a list"""
     s = []
     if isinstance(text, list):
         text = " ".join(text)
@@ -220,7 +220,7 @@ def get_email_addresses(text):
 
 
 def get_telephone_numbers(text):
-    """ finds North American style telephone numbers in text and return as a list """
+    """finds North American style telephone numbers in text and return as a list"""
     s = []
     # look for telephone numbers spanning pairwise with area code and number
     # separated by whitespace
@@ -256,7 +256,7 @@ def get_telephone_numbers(text):
 
 
 def get_capitalized_words(text):
-    """ Finds individual capitalized words and return in a list """
+    """Finds individual capitalized words and return in a list"""
     s = []
     if isinstance(text, list):
         text = " ".join(text)
@@ -268,7 +268,7 @@ def get_capitalized_words(text):
 
 
 def get_uppercase_words(text):
-    """ Finds individual uppercase words and return in a list """
+    """Finds individual uppercase words and return in a list"""
     s = []
     if isinstance(text, list):
         text = " ".join(text)
@@ -280,7 +280,7 @@ def get_uppercase_words(text):
 
 
 def get_numbers(text):
-    """ Finds valid numeric values in text and return in a list """
+    """Finds valid numeric values in text and return in a list"""
     s = []
     if isinstance(text, list):
         text = " ".join(text)

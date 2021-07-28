@@ -320,21 +320,21 @@ class SuppressStdoutStderr(object):
 
 
 def full_path(file):
-    """ Returns the fully expanded path of a file"""
+    """Returns the fully expanded path of a file"""
     if "~" in str(file):
         return os.path.expanduser(file)
     return os.path.expanduser(os.path.abspath(file))
 
 
 def split_path(file):
-    """ Returns a tuple containing a file's (directory, name.ext)"""
+    """Returns a tuple containing a file's (directory, name.ext)"""
     if os.path.isdir(file):
         return full_path(file), None
     return os.path.split(full_path(file))
 
 
 def split_filename(file):
-    """ Splits a file name into base name and extension """
+    """Splits a file name into base name and extension"""
     return os.path.splitext(file)
 
 
@@ -372,7 +372,7 @@ class FileOps:
         self.last_file = ""
 
     def verify_file(self, file):
-        """ Checks if a file exists """
+        """Checks if a file exists"""
         if not os.path.isfile(full_path(file)):
             if self.verbose:
                 self.colprint("File ", file, " does not exist", "red")
@@ -421,7 +421,7 @@ class FileOps:
             print("".join(s))
 
     def verify_dir_not_file(self, name):
-        """ Checks if a name refers to a file rather than a directory """
+        """Checks if a name refers to a file rather than a directory"""
         dirname = full_path(name)
         if os.path.isfile(dirname):
             if self.verbose:
@@ -512,7 +512,7 @@ class FileOps:
         return False
 
     def make_directory(self, name):
-        """ Creates a directory with name """
+        """Creates a directory with name"""
         if not self.verify_dir_not_file(name):
             return False
         dirname = full_path(name)
@@ -531,7 +531,7 @@ class FileOps:
         return False
 
     def remove_file(self, file):
-        """ Removes specified file """
+        """Removes specified file"""
         filepath = full_path(file)
         if os.path.isfile(filepath):
             if not self.simulate:
@@ -603,7 +603,7 @@ class FileOps:
         return False
 
     def get_file_list(self, path, spec="*", recursive=False, as_iterator=False):
-        """ Gets a file listing from the root of the specified path """
+        """Gets a file listing from the root of the specified path"""
         if not self.verify_dir_not_file(path):
             return False
         dirname = full_path(path)
@@ -617,7 +617,7 @@ class FileOps:
         return False
 
     def print_dir_summary(self, path, colour_list=True):
-        """ Gets a sub-directory listing from the root of the specified path """
+        """Gets a sub-directory listing from the root of the specified path"""
         if not self.verify_dir_not_file(path):
             return False
         dirname = full_path(path)
@@ -650,7 +650,7 @@ class FileOps:
                 fs["total_size"] += size
                 fs["max_size"] = max(size, fs["max_size"])
             if fs["file_count"] > 0:
-                fs["mean_size"] = fs["total_size"] / fs["dir_count"]
+                fs["mean_size"] = fs["total_size"] / fs["file_count"]
             print("Directory: " + crayons.blue(dirname, bold=True))
             print("  Files         : " + crayons.cyan(fs["file_count"]))
             print("  Directories   : " + crayons.cyan(fs["dir_count"]))
@@ -670,7 +670,7 @@ class FileOps:
         return False
 
     def print_file_summary(self, path, recursive=False, colour_list=True):
-        """ Gets a file listing from the root of the specified path """
+        """Gets a file listing from the root of the specified path"""
         if not self.verify_dir_not_file(path):
             return False
         dirname = full_path(path)

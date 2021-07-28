@@ -176,7 +176,7 @@ class Point:
 
 
 def points2d_at_height(pts, height):
-    """ Returns a list of 2D point tuples as 3D tuples at height"""
+    """Returns a list of 2D point tuples as 3D tuples at height"""
     if isinstance(pts, tuple):
         if len(pts) == 2:
             return [(*pts, height)]

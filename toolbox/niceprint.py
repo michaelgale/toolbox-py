@@ -74,14 +74,14 @@ def file_size_str(size, style=None):
 
 
 def _full_path(file):
-    """ Returns the fully expanded path of a file"""
+    """Returns the fully expanded path of a file"""
     if "~" in file:
         return os.path.expanduser(file)
     return os.path.expanduser(os.path.abspath(file))
 
 
 def _split_path(file):
-    """ Returns a tuple containing a file's (directory, name.ext)"""
+    """Returns a tuple containing a file's (directory, name.ext)"""
     if os.path.isdir(file):
         return _full_path(file), None
     return os.path.split(_full_path(file))

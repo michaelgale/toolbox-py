@@ -33,7 +33,7 @@ from .point import Point
 
 
 class Rect:
-    """ 2D Rectangle class """
+    """2D Rectangle class"""
 
     def __init__(self, width=2.0, height=2.0, bottomUp=False):
         self.bottom_up = bottomUp
@@ -342,11 +342,11 @@ class Rect:
 
     def shove_with_constraint(self, other, constraint):
         """Shoves a rectangle if it violates an overlapping constraint from
-        another rectangle. Constraints can be: 
+        another rectangle. Constraints can be:
         - left_bound, right_bound, top_bound, bottom_bound
         """
         c = constraint.lower().split("_")
-        if "bound" not in c: 
+        if "bound" not in c:
             return
         if c[0] == "left":
             if self.left - other.right < 0:
@@ -360,7 +360,6 @@ class Rect:
         elif c[0] == "bottom":
             if self.bottom - other.top < 0:
                 self.anchor_to_pt(other, from_pt="bottom", to_pt="top")
-        
 
     def contains(self, pt):
         """Return true if a point is inside the rectangle."""
@@ -578,7 +577,7 @@ class Rect:
                             r.move_top_left_to((r.left + cw / 2 - r.width / 2, r.top))
                             # r.set_size_anchored(col_widths[col], r.height, "centre")
                         # else:
-                            # r.set_size_anchored(col_widths[col], r.height, "left")
+                        # r.set_size_anchored(col_widths[col], r.height, "left")
                         new_rects.append(r)
 
         return new_rects

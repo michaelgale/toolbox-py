@@ -215,6 +215,7 @@ def test_anchored():
     assert pt1 == (-0.5, 0.5)
     assert pt2 == (1.5, -1.5)
 
+
 def test_shove_bound():
 
     r1 = Rect(2, 1)
@@ -244,6 +245,7 @@ def test_shove_bound():
     pt2 = r2.get_bottom_right()
     assert pt1 == (-1, 4)
     assert pt2 == (0, 1)
+
 
 # def test_arrange():
 #     r1 = Rect()

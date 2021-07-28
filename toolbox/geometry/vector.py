@@ -85,7 +85,7 @@ def _rows_multiplication(r1, r2):
 
 
 class Matrix(object):
-    """ a transformation matrix """
+    """a transformation matrix"""
 
     def __init__(self, rows):
         self.rows = rows
@@ -135,11 +135,11 @@ class Matrix(object):
             raise MatrixError
 
     def copy(self):
-        """ make a copy of this matrix """
+        """make a copy of this matrix"""
         return Matrix(copy.deepcopy(self.rows))
 
     def rotate(self, angle, axis, units=Degrees):
-        """ rotate the matrix by an angle around an axis """
+        """rotate the matrix by an angle around an axis"""
         if units == Degrees:
             c = math.cos(angle / 180.0 * math.pi)
             s = math.sin(angle / 180.0 * math.pi)
@@ -157,11 +157,11 @@ class Matrix(object):
         return self * rotation
 
     def scale(self, sx, sy, sz):
-        """ scale the matrix by a number"""
+        """scale the matrix by a number"""
         return Matrix([[sx, 0, 0], [0, sy, 0], [0, 0, sz]]) * self
 
     def transpose(self):
-        """ transpose """
+        """transpose"""
         r = self.rows
         return Matrix(
             [
@@ -172,7 +172,7 @@ class Matrix(object):
         )
 
     def det(self):
-        """ determinant of the matrix """
+        """determinant of the matrix"""
         r = self.rows
         terms = [
             r[0][0] * (r[1][1] * r[2][2] - r[1][2] * r[2][1]),
@@ -182,11 +182,11 @@ class Matrix(object):
         return sum(terms)
 
     def flatten(self):
-        """ flatten the matrix """
+        """flatten the matrix"""
         return tuple(reduce(lambda x, y: x + y, self.rows))
 
     def fix_diagonal(self):
-        """ Some applications do not like matrices with zero diagonal elements. """
+        """Some applications do not like matrices with zero diagonal elements."""
         corrected = False
         for i in range(3):
             if self.rows[i][i] == 0.0:
@@ -201,12 +201,12 @@ class Matrix(object):
 
 
 def Identity():
-    """ a transformation matrix representing Identity """
+    """a transformation matrix representing Identity"""
     return Matrix([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
 
 
 class Vector(object):
-    """ a Vector in 3D"""
+    """a Vector in 3D"""
 
     def __init__(self, x, y=None, z=None):
         if isinstance(x, (tuple, list)):
@@ -304,7 +304,7 @@ class Vector(object):
         return Vector(self.x, self.y, self.z)
 
     def cross(self, other):
-        """ cross product """
+        """cross product"""
         return Vector(
             self.y * other.z - self.z * other.y,
             self.z * other.x - self.x * other.z,
@@ -312,11 +312,11 @@ class Vector(object):
         )
 
     def dot(self, other):
-        """ dot product"""
+        """dot product"""
         return self.x * other.x + self.y * other.y + self.z * other.z
 
     def norm(self):
-        """ normalized """
+        """normalized"""
         _length = abs(self)
         self.x = self.x / _length
         self.y = self.y / _length
@@ -375,7 +375,7 @@ class Vector(object):
 
 
 class Vector2D(object):
-    """ a Vector in 2D """
+    """a Vector in 2D"""
 
     def __init__(self, x, y):
         self.x, self.y = x, y
@@ -433,7 +433,7 @@ class Vector2D(object):
         return Vector2D(self.x, self.y)
 
     def dot(self, other):
-        """ dot product """
+        """dot product"""
         return self.x * other.x + self.y * other.y
 
 
@@ -589,7 +589,7 @@ class Point:
 
 
 def euler_to_rot_matrix(euler):
-    """ converts a 3D tuple of euler rotation angles into a rotation matrix """
+    """converts a 3D tuple of euler rotation angles into a rotation matrix"""
     ax = Identity().rotate(euler[0], XAxis)
     ay = Identity().rotate(euler[1], YAxis)
     az = Identity().rotate(euler[2], ZAxis)
@@ -599,7 +599,7 @@ def euler_to_rot_matrix(euler):
 
 
 def safe_vector(v):
-    """ returns a Vector object by automatically inferring the input argument v """
+    """returns a Vector object by automatically inferring the input argument v"""
     if isinstance(v, Vector):
         return v
     elif isinstance(v, (tuple, list)):
