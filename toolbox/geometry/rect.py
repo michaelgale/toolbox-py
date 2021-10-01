@@ -130,18 +130,30 @@ class Rect:
         return (self.right, self.bottom)
 
     def get_anchor_pt(self, anchor_pt):
-        if "left" in anchor_pt:
+        if "left_quarter" in anchor_pt:
+            x = self.left + self.width / 4
+        elif "right_quarter" in anchor_pt:
+            x = self.right - self.width / 4
+        elif "left" in anchor_pt:
             x = self.left
         elif "right" in anchor_pt:
             x = self.right
-        else:
+        elif any(e in anchor_pt for e in ["center", "centre", "mid_width"]):
             x = self.left + self.width / 2
-        if "top" in anchor_pt:
+        else:
+            x = self.left
+        if "top_quarter" in anchor_pt:
+            y = self.top - self.height / 4
+        elif "bottom_quarter" in anchor_pt:
+            y = self.bottom + self.height / 4
+        elif "top" in anchor_pt:
             y = self.top
         elif "bottom" in anchor_pt:
             y = self.bottom
-        else:
+        elif any(e in anchor_pt for e in ["center", "centre", "mid_height"]):
             y = self.top - self.height / 2
+        else:
+            y = self.top
         return x, y
 
     def _xy_from_pt(self, pt):
@@ -253,24 +265,44 @@ class Rect:
         """Sets a new size for the rectangle and optionally anchors the
         rectangle to any one of 10 points specified with a string containing
         anchor point description, e.g. 'top left', 'right', 'bottom centre'"""
-        if "left" in anchor_pt:
+        if "left_quarter" in anchor_pt:
+            x1 = self.left + self.width / 4
+            x2 = x1 + width
+        elif "right_quarter" in anchor_pt:
+            x1 = self.right - self.width / 4
+            x2 = x1 + width
+        elif "left" in anchor_pt:
             x1 = self.left
             x2 = self.left + width
         elif "right" in anchor_pt:
             x1 = self.right
             x2 = self.right - width
-        else:
+        elif any(e in anchor_pt for e in ["centre", "center", "mid_width"]):
             x1 = self.left + self.width / 2 - width / 2
             x2 = self.right - self.width / 2 + width / 2
-        if "top" in anchor_pt:
+        else:
+            x1 = self.left
+            x2 = self.left + width
+
+        if "top_quarter" in anchor_pt:
+            y1 = self.top - self.height / 4
+            y2 = y1 - height
+        elif "bottom_quarter" in anchor_pt:
+            y1 = self.bottom + self.height / 4
+            y2 = y1 + height
+        elif "top" in anchor_pt:
             y1 = self.top
             y2 = self.top - height
         elif "bottom" in anchor_pt:
             y1 = self.bottom
             y2 = self.bottom + height
-        else:
+        elif any(e in anchor_pt for e in ["centre", "center", "mid_height"]):
             y1 = self.top - self.height / 2 + height / 2
             y2 = self.bottom + self.height / 2 - height / 2
+        else:
+            y1 = self.top
+            y2 = self.top - height
+
         if self.bottom_up:
             y1, y2 = y2, y1
         self.set_points((x1, y1), (x2, y2))
@@ -279,30 +311,44 @@ class Rect:
         """Moves a rectangle from its anchor point to another rectangle's
         anchor point. Example: "top right" to "bottom left" """
         x, y = rect.get_anchor_pt(to_pt)
-        if "left" in from_pt:
+        if "left_quarter" in from_pt:
+            x1 = x - self.width / 4
+            x2 = max(x, self.right) if "resize" in to_pt else x1 + self.width
+        elif "right_quarter" in from_pt:
+            x1 = x + self.width / 4
+            x2 = max(x, self.right) if "resize" in to_pt else x1 + self.width
+        elif "left" in from_pt:
             x1 = x
             x2 = max(x, self.right) if "resize" in to_pt else x1 + self.width
         elif "right" in from_pt:
             x2 = x
             x1 = min(self.left, x) if "resize" in to_pt else x2 - self.width
-        elif "centre" in from_pt or "center" in from_pt:
+        elif any(e in from_pt for e in ["centre", "center", "mid_width"]):
             x1 = x - self.width / 2
             x2 = x1 + self.width
         else:
             x1 = self.left
             x2 = self.right
-        if "top" in from_pt:
+
+        if "top_quarter" in from_pt:
+            y1 = y + self.height * 0.75
+            y2 = min(y, self.bottom) if "resize" in to_pt else y1 - self.height
+        elif "bottom_quarter" in from_pt:
+            y1 = y + self.height / 4
+            y2 = min(y, self.bottom) if "resize" in to_pt else y1 - self.height
+        elif "top" in from_pt:
             y1 = y
             y2 = min(y, self.bottom) if "resize" in to_pt else y1 - self.height
         elif "bottom" in from_pt:
             y2 = y
             y1 = max(self.top, y) if "resize" in to_pt else y2 + self.height
-        elif "centre" in from_pt or "center" in from_pt:
+        elif any(e in from_pt for e in ["centre", "center", "mid_height"]):
             y1 = y + self.height / 2
             y2 = y1 - self.height
         else:
             y1 = self.top
             y2 = self.bottom
+
         if self.bottom_up:
             y1, y2 = min(y2, y1), max(y2, y1)
         self.set_points((x1, y1), (x2, y2))
@@ -575,6 +621,8 @@ class Rect:
                             # r.set_size_anchored(col_widths[col], r.height, "right")
                         elif horz_align == "centre":
                             r.move_top_left_to((r.left + cw / 2 - r.width / 2, r.top))
+                        else:
+                            r.move_top_left_to((r.left, r.top))
                             # r.set_size_anchored(col_widths[col], r.height, "centre")
                         # else:
                         # r.set_size_anchored(col_widths[col], r.height, "left")
