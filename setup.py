@@ -61,7 +61,8 @@ setuptools.setup(
     install_requires=[
         'jinja2 >= 2.10, <3',
         'metayaml',
-        "crayons",
+        'crayons',
+        'pycountry',
     ],
     scripts=['toolbox/scripts/foldercheck.py'],
     # entry_points = {
