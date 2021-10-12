@@ -29,6 +29,7 @@ import sys, os
 import os.path
 import crayons
 
+from .datautils import get_numbers, get_email_addresses, replace_prov_state_codes
 
 colour_gradient = [
     (5e9, crayons.red, False),
@@ -62,13 +63,16 @@ def file_size_str(size, style=None):
         s = "%.2f MB" % (size / 1e6)
     elif size > 1e3:
         s = "%.2f kB" % (size / 1e3)
-    else:
+    elif size > 0:
         s = "%.0f bytes" % (size)
+    else:
+        s = "0 bytes"
     if style is not None:
         gradient = colour_gradient if style == "colour" else mono_gradient
         for thr, c, b in gradient:
             if size > thr:
                 return c("%10s" % (s), bold=b)
+        return s
     else:
         return crayons.white("%10s" % (s))
 
@@ -164,3 +168,77 @@ def logmsg(msg, prefix="", level=2, log_output=True, log_level=0):
         s.append(" : ")
     s.append(msg)
     print("".join(s))
+
+
+def toolboxprint(
+    text,
+    green_words=None,
+    yellow_words=None,
+    red_words=None,
+    cyan_words=None,
+    magenta_words=None,
+    bold_words=None,
+):
+    """Prints a string with fancy colourization for common items like numbers."""
+    s = []
+    ts = text
+    numbers = get_numbers(text)
+    emails = get_email_addresses(text)
+    gw = green_words if green_words is not None else []
+    yw = yellow_words if yellow_words is not None else []
+    rw = red_words if red_words is not None else []
+    cw = cyan_words if cyan_words is not None else []
+    mw = magenta_words if magenta_words is not None else []
+    bw = bold_words if bold_words is not None else []
+    words = text.split()
+    n = len(words)
+    next_is_currency = False
+    replace_dollars = False
+    for i, t in enumerate(words):
+        if t[0] == "$" and len(t) > 1:
+            ts = ts.replace(t, str(crayons.green(str(t), bold=True)))
+        elif (i + 1) < n and t == "$":
+            if words[i + 1] in numbers:
+                replace_dollars = True
+                next_is_currency = True
+        elif t in numbers:
+            if next_is_currency:
+                ts = ts.replace(t, str(crayons.green(str(t), bold=True)))
+                next_is_currency = False
+            else:
+                # guard against replacing substrings of numbers by checking for
+                # delimiting whitespace
+                if i == 0:
+                    ts = ts.replace(
+                        "%s " % (t), "%s " % (str(crayons.cyan(str(t), bold=True)))
+                    )
+                elif i == n - 1:
+                    ts = ts.replace(
+                        " %s" % (t), " %s" % (str(crayons.cyan(str(t), bold=True)))
+                    )
+                else:
+                    ts = ts.replace(
+                        " %s " % (t), " %s " % (str(crayons.cyan(str(t), bold=True)))
+                    )
+        elif t.startswith("0x"):
+            ts = ts.replace(t, str(crayons.magenta(str(t), bold=True)))
+        elif "%" in t:
+            ts = ts.replace(t, str(crayons.cyan(str(t), bold=True)))
+        elif t in emails:
+            ts = ts.replace(t, str(crayons.blue(str(t), bold=True)))
+        elif t in gw:
+            ts = ts.replace(t, str(crayons.green(str(t), bold=False)))
+        elif t in yw:
+            ts = ts.replace(t, str(crayons.yellow(str(t), bold=False)))
+        elif t in rw:
+            ts = ts.replace(t, str(crayons.red(str(t), bold=False)))
+        elif t in cw:
+            ts = ts.replace(t, str(crayons.cyan(str(t), bold=False)))
+        elif t in mw:
+            ts = ts.replace(t, str(crayons.magenta(str(t), bold=False)))
+        elif t in bw:
+            ts = ts.replace(t, str(crayons.white(str(t), bold=True)))
+    if replace_dollars:
+        ds = str(crayons.green(str("$"), bold=True))
+        ts = ts.replace("$ ", ds)
+    print(ts)

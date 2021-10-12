@@ -24,6 +24,9 @@
 # Misc data manipulation and validation functions
 #
 import re
+import pycountry
+
+from toolbox.constants import *
 
 
 def str_constraint(constraint, check_value, tolerance=0.1):
@@ -292,6 +295,76 @@ def get_numbers(text):
                 break
         if ok:
             # check for invalid trivial single - or .
-            if t != "-" and t != ".":
+            if not all([x == "." for x in t]) and not all([x == "-" for x in t]):
                 s.append(t)
     return s
+
+
+def strip_punc(text):
+    """Strips any common punctuation characters from text"""
+    for c in ", . ; : - _ / ? ! @ & % ( ) [ ] { }".split():
+        text = text.replace(c, "")
+    return text
+
+
+def replace_prov_state_names(text):
+    """Replaces any instances of Canadian province or US state names with codes"""
+    rs = text
+    for k, v in CAN_PROVINCE_CODE.items():
+        if k in text:
+            rs = rs.replace(k, v)
+    for k, v in US_STATE_CODE.items():
+        if k in text:
+            rs = rs.replace(k, v)
+    return rs
+
+
+def replace_prov_state_codes(text):
+    """Replaces any instances of province/state codes with names"""
+    rs = text
+    for k, v in CAN_PROVINCE_NAME.items():
+        if k in text:
+            rs = rs.replace(k, v)
+    for k, v in US_STATE_NAME.items():
+        if k in text:
+            rs = rs.replace(k, v)
+    return rs
+
+
+def replace_country_names(text):
+    """Replaces any instances of country names with 2-letter ISO code"""
+    rs = text
+    ts = text.split()
+    for t in ts:
+        tc = strip_punc(t)
+        try:
+            country_code = pycountry.countries.get(name=tc)
+        except LookupError:
+            continue
+        if country_code is not None:
+            rs = rs.replace(tc, country_code.alpha_2)
+    for ng in [2, 3, 4]:
+        ngs = n_grams(rs, ng, as_list=False)
+        for n in ngs:
+            tc = strip_punc(n)
+            try:
+                country_code = pycountry.countries.get(name=tc)
+            except LookupError:
+                continue
+            if country_code is not None:
+                rs = rs.replace(tc, country_code.alpha_2)
+    return rs
+
+
+def replace_country_codes(text):
+    """Replaces any instances of country 2-letter ISO codes with names"""
+    rs = text
+    ts = text.split()
+    for t in ts:
+        try:
+            country_code = pycountry.countries.get(alpha_2=t)
+        except LookupError:
+            continue
+        if country_code is not None:
+            rs = rs.replace(t, country_code.name)
+    return rs

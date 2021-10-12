@@ -216,3 +216,39 @@ def test_get_numbers():
     assert "613" in x
     assert "204-293-293" in x
     assert "876-200-S0AP" not in x
+
+
+def test_prov_state_lookup():
+    x = CAN_PROVINCE_CODE["Ontario"]
+    assert x == "ON"
+    y = CAN_PROVINCE_NAME["AB"]
+    assert y == "Alberta"
+    x = US_STATE_CODE["Vermont"]
+    assert x == "VT"
+    y = US_STATE_NAME["FL"]
+    assert y == "Florida"
+
+    s1 = "Ontario alberta Onttario"
+    s2 = replace_prov_state_names(s1)
+    assert s2 == "ON alberta Onttario"
+
+    s1 = "Vermont florida"
+    s2 = replace_prov_state_names(s1)
+    assert s2 == "VT florida"
+
+    s1 = "blah blah ON FL vt"
+    s2 = replace_prov_state_codes(s1)
+    assert s2 == "blah blah Ontario Florida vt"
+
+def test_country_lookup():
+    s1 = "Canada, Ontario"
+    s2 = replace_country_names(s1)
+    assert s2 == "CA, Ontario"
+
+    s1 = "blah blah canada United Kingdom"
+    s2 = replace_country_names(s1)
+    assert s2 == "blah blah CA GB"
+
+    s1 = "blah blah CA blah DE"
+    s2 = replace_country_codes(s1)
+    assert s2 == "blah blah Canada blah Germany"
