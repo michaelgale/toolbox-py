@@ -4,7 +4,7 @@ import os
 
 # fmt: off
 __project__ = 'toolbox'
-__version__ = '0.6.0'
+__version__ = '0.6.1'
 # fmt: on
 
 VERSION = __project__ + "-" + __version__
@@ -30,6 +30,7 @@ from .geometry.point import (
     Point,
     grid_points_2d,
     grid_points_at_height,
+    translate_points,
     points2d_at_height,
     centroid_of_points,
 )

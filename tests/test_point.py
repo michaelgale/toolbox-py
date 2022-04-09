@@ -1,7 +1,4 @@
 # system modules
-import math, os.path
-import sys
-import pytest
 from math import pi
 
 # my modules
@@ -64,6 +61,12 @@ def test_grid_2d():
     assert pts[3] == (0, 2, 3)
     assert pts[4] == (10, -2, 3)
     assert pts[5] == (10, 2, 3)
+    pts = [(1, 1), (2, 2), (4, 3), (3, 0)]
+    tpts = translate_points(pts, -1, -2)
+    assert tpts[0] == (0, -1)
+    assert tpts[1] == (1, 0)
+    assert tpts[2] == (3, 1)
+    assert tpts[3] == (2, -2)
 
 
 def test_centroid():

@@ -181,6 +181,7 @@ def toolboxprint(
 ):
     """Prints a string with fancy colourization for common items like numbers."""
     s = []
+    text = str(text)
     ts = text
     numbers = get_numbers(text)
     emails = get_email_addresses(text)
@@ -190,6 +191,7 @@ def toolboxprint(
     cw = cyan_words if cyan_words is not None else []
     mw = magenta_words if magenta_words is not None else []
     bw = bold_words if bold_words is not None else []
+    text = str(text)
     words = text.split()
     n = len(words)
     next_is_currency = False
@@ -217,9 +219,9 @@ def toolboxprint(
                         " %s" % (t), " %s" % (str(crayons.cyan(str(t), bold=True)))
                     )
                 else:
-                    ts = ts.replace(
-                        " %s " % (t), " %s " % (str(crayons.cyan(str(t), bold=True)))
-                    )
+                    s1 = " %s " % (t)
+                    s2 = " %s " % (str(crayons.cyan(str(t), bold=True)))
+                    ts = ts.replace(s1, s2)
         elif t.startswith("0x"):
             ts = ts.replace(t, str(crayons.magenta(str(t), bold=True)))
         elif "%" in t:

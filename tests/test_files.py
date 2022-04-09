@@ -1,11 +1,5 @@
-# Sample Test passing with nose and pytest
-
 # system modules
-import math, os.path
-import sys
-import pytest
-import pprint
-import string
+import os.path
 
 # my modules
 from toolbox import *

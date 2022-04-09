@@ -214,6 +214,22 @@ def grid_points_2d(length, width, div, width_div=None):
             pts.append((x, y))
     return pts
 
+def translate_points(pts, dx, dy=None):
+    if isinstance(dx, (tuple, list)):
+        xo, yo = dx[0], dx[1]
+    elif isinstance(dx, Point):
+        xo, yo = dx.x, dx.y
+    elif dy is not None:
+        xo, yo = dx, dy
+    else:
+        xo, yo = dx, dx
+    new_pts = []
+    for pt in pts:
+        np = Point(pt)
+        np.translate(xo, yo)
+        new_pts.append(np.as_tuple())
+    return new_pts
+
 
 def grid_points_at_height(length, width, height, div, width_div=None):
     """A convenience method to return 2D grid points as 3D points at

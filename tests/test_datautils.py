@@ -1,12 +1,3 @@
-# Sample Test passing with nose and pytest
-
-# system modules
-import math, os.path
-import sys
-import pytest
-import pprint
-from math import pi
-
 # my modules
 from toolbox import *
 
@@ -56,6 +47,7 @@ def test_valid_value():
 
 
 all_words = ["abc", "def", "ghi", "jklmnop", "Important", "important", "ImPoRtAnT"]
+all_words_str = "abc def ghi jklmnop Important important ImPoRtAnT"
 
 
 def test_word_list():
@@ -69,7 +61,11 @@ def test_word_list():
     assert x
     x = are_words_in_word_list("important", all_words, case_sensitive=False)
     assert x
+    x = are_words_in_word_list("important", all_words_str, case_sensitive=False)
+    assert x
     x = are_words_in_word_list(["abc", "def"], all_words, case_sensitive=False)
+    assert x
+    x = are_words_in_word_list(["abc", "def"], all_words_str, case_sensitive=False)
     assert x
     x = are_words_in_word_list(["abc", "Def"], all_words, case_sensitive=True)
     assert not x
@@ -79,7 +75,11 @@ def test_word_list():
     assert x
     x = are_words_in_word_list("jk*", all_words, case_sensitive=True)
     assert x
+    x = are_words_in_word_list("jk*", all_words_str, case_sensitive=True)
+    assert x
     x = are_words_in_word_list("Jk*", all_words, case_sensitive=True)
+    assert not x
+    x = are_words_in_word_list("Jk*", all_words_str, case_sensitive=True)
     assert not x
     x = are_words_in_word_list(["abc", "imp*"], all_words, case_sensitive=False)
     assert x
@@ -232,13 +232,22 @@ def test_prov_state_lookup():
     s2 = replace_prov_state_names(s1)
     assert s2 == "ON alberta Onttario"
 
+    s1 = "Ontario alberta Onttario"
+    s2 = replace_prov_state_names(s1, case_sensitive=False)
+    assert s2 == "ON AB Onttario"
+
     s1 = "Vermont florida"
     s2 = replace_prov_state_names(s1)
     assert s2 == "VT florida"
 
+    s1 = "Vermont florida"
+    s2 = replace_prov_state_names(s1, case_sensitive=False)
+    assert s2 == "VT FL"
+
     s1 = "blah blah ON FL vt"
     s2 = replace_prov_state_codes(s1)
     assert s2 == "blah blah Ontario Florida vt"
+
 
 def test_country_lookup():
     s1 = "Canada, Ontario"

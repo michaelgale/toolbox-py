@@ -1,8 +1,3 @@
-# system modules
-import math, os.path
-import sys
-import pytest
-
 # my modules
 from toolbox import *
 

@@ -1,9 +1,5 @@
 # system modules
-import math, os.path
 import copy
-import sys
-import pytest
-from math import pi
 
 # my modules
 from toolbox import *

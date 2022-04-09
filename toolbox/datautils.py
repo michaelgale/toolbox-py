@@ -84,6 +84,8 @@ def are_words_in_word_list(
     The search can be performed with or without case sensitivity.
     The check words can contain wildcards, e.g. "abc*" to allow
     a wider range of matches against the word list."""
+    if isinstance(word_list, str):
+        word_list = word_list.split()
     if not isinstance(words, list):
         check_words = [words]
     else:
@@ -212,6 +214,7 @@ def get_email_addresses(text):
     s = []
     if isinstance(text, list):
         text = " ".join(text)
+    text = str(text)
     for t in text.split():
         if len(t) > 1:
             address = re.search(
@@ -263,6 +266,7 @@ def get_capitalized_words(text):
     s = []
     if isinstance(text, list):
         text = " ".join(text)
+    text = str(text)
     for t in text.split():
         if len(t) > 1:
             if t[0].isupper() and t[1:].islower():
@@ -275,6 +279,7 @@ def get_uppercase_words(text):
     s = []
     if isinstance(text, list):
         text = " ".join(text)
+    text = str(text)
     for t in text.split():
         if len(t) > 1:
             if t.isupper() and not t.isnumeric():
@@ -287,6 +292,7 @@ def get_numbers(text):
     s = []
     if isinstance(text, list):
         text = " ".join(text)
+    text = str(text)
     for t in text.split():
         ok = True
         for c in t:
@@ -307,32 +313,43 @@ def strip_punc(text):
     return text
 
 
-def replace_prov_state_names(text):
+def replace_case_insensitive(text, word, new_word):
+    """Replaces occurences of word with new_word in text without case sensitivity"""
+    ts = text.split()
+    ns = []
+    for t in ts:
+        if word.lower() in t.lower():
+            ns.append(new_word)
+        else:
+            ns.append(t)
+    return " ".join(ns)
+
+
+def replace_prov_state_names(text, case_sensitive=True):
     """Replaces any instances of Canadian province or US state names with codes"""
     rs = text
-    for k, v in CAN_PROVINCE_CODE.items():
-        if k in text:
+    for k, v in {**CAN_PROVINCE_CODE, **US_STATE_CODE}.items():
+        if case_sensitive and k in text:
             rs = rs.replace(k, v)
-    for k, v in US_STATE_CODE.items():
-        if k in text:
-            rs = rs.replace(k, v)
+        elif not case_sensitive:
+            rs = replace_case_insensitive(rs, k, v)
     return rs
 
 
-def replace_prov_state_codes(text):
+def replace_prov_state_codes(text, case_sensitive=True):
     """Replaces any instances of province/state codes with names"""
     rs = text
-    for k, v in CAN_PROVINCE_NAME.items():
-        if k in text:
+    for k, v in {**CAN_PROVINCE_NAME, **US_STATE_NAME}.items():
+        if case_sensitive and k in text:
             rs = rs.replace(k, v)
-    for k, v in US_STATE_NAME.items():
-        if k in text:
-            rs = rs.replace(k, v)
+        elif not case_sensitive:
+            rs = replace_case_insensitive(rs, k, v)
     return rs
 
 
 def replace_country_names(text):
     """Replaces any instances of country names with 2-letter ISO code"""
+    text = str(text)
     rs = text
     ts = text.split()
     for t in ts:
@@ -358,6 +375,7 @@ def replace_country_names(text):
 
 def replace_country_codes(text):
     """Replaces any instances of country 2-letter ISO codes with names"""
+    text = str(text)
     rs = text
     ts = text.split()
     for t in ts:
