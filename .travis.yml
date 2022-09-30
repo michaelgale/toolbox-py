@@ -3,6 +3,9 @@ language: python
 python:
   - "3.7"
 
+before_script:
+    - pip install setuptools==60.8.2
+
 script:
     - python setup.py install
     - cd tests
