@@ -64,7 +64,7 @@ setuptools.setup(
         'crayons',
         'pycountry',
     ],
-    scripts=['toolbox/scripts/foldercheck.py'],
+    scripts=['toolbox/scripts/foldercheck.py', 'toolbox/scripts/tidyfolder.py'],
     # entry_points = {
     #         'scripts': [ 'foldercheck=scripts:foldercheck.py',                  
     #         ],              

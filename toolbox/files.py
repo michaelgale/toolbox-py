@@ -55,6 +55,8 @@ image_files = [
     "icns",
     "exif",
     "nef",
+    "heic",
+    "exr",
 ]
 archive_files = [
     "dmg",
@@ -170,6 +172,7 @@ doc_files = [
     "md",
     "tex",
     "rst",
+    "rtf",
 ]
 src_files = [
     "c",
@@ -266,9 +269,9 @@ file_groups = {
     "Vector": vector_files,
     "CAD": cad_files,
     "Documents": doc_files,
-    "Source code": src_files,
+    "SourceCode": src_files,
     "Web": web_files,
-    "Object code": obj_files,
+    "ObjectCode": obj_files,
     "Lego": lego_files,
     "Config": cfg_files,
     "Fonts": font_files,
@@ -511,7 +514,7 @@ class FileOps:
             )
         return False
 
-    def make_directory(self, name):
+    def make_directory(self, name, silent=False):
         """Creates a directory with name"""
         if not self.verify_dir_not_file(name):
             return False
@@ -525,7 +528,7 @@ class FileOps:
                 return True
             except OSError:
                 self.colprint("Directory ", dirname, " cannot be created", "red")
-        else:
+        elif not silent:
             if self.verbose:
                 self.colprint("Directory ", name, " already exists", "yellow")
         return False
@@ -602,15 +605,34 @@ class FileOps:
             self.colprint("Directory ", dirname, " does not exist", "red")
         return False
 
-    def get_file_list(self, path, spec="*", recursive=False, as_iterator=False):
+    def get_files_in_group(self, files, group):
+        group_files = []
+        if group not in file_groups:
+            raise KeyError("File group named %s is not recognized" % (group))
+        for file in files:
+            f, e = split_filename(file)
+            ext = e.replace(".", "").lower()
+            if os.path.isfile(file) and len(ext):
+                if ext in file_groups[group]:
+                    group_files.append(file)
+        return group_files
+
+    def get_file_list(
+        self, path, spec="*", recursive=False, as_iterator=False, for_group=None
+    ):
         """Gets a file listing from the root of the specified path"""
         if not self.verify_dir_not_file(path):
             return False
         dirname = full_path(path)
         if os.path.isdir(dirname):
-            files = Path(dirname).rglob(spec)
+            if recursive:
+                files = Path(dirname).rglob(spec)
+            else:
+                files = Path(dirname).glob(spec)
             if as_iterator:
                 return files
+            if for_group is not None:
+                return self.get_files_in_group(list(files), for_group)
             return list(files)
         elif self.verbose:
             self.colprint("Directory ", dirname, " does not exist", "red")
