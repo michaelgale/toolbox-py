@@ -63,6 +63,7 @@ setuptools.setup(
         'metayaml',
         'crayons',
         'pycountry',
+        'pytest-cov',
     ],
     scripts=['toolbox/scripts/foldercheck.py', 'toolbox/scripts/tidyfolder.py'],
     # entry_points = {

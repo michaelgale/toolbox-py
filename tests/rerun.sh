@@ -2,4 +2,4 @@
 cd ..
 python setup.py install
 cd tests
-pytest -s
+pytest -s -v --cov
