@@ -23,7 +23,9 @@
 #
 # Misc data manipulation and validation functions
 #
+import math
 import re
+import string
 import pycountry
 
 from toolbox.constants import *
@@ -386,3 +388,52 @@ def replace_country_codes(text):
         if country_code is not None:
             rs = rs.replace(t, country_code.name)
     return rs
+
+
+def rgb_from_hex(hexcode, as_uint8=False):
+    if len(hexcode) < 6:
+        return 0, 0, 0
+    hs = hexcode.lstrip("#")
+    if not all(c in string.hexdigits for c in hs):
+        return 0, 0, 0
+    [rd, gd, bd] = tuple(int(hs[i : i + 2], 16) for i in (0, 2, 4))
+    if as_uint8:
+        return rd, gd, bd
+    r = float(rd) / 255.0
+    g = float(gd) / 255.0
+    b = float(bd) / 255.0
+    return r, g, b
+
+
+def colour_name_from_tuple(colour):
+    if not isinstance(colour, (list, tuple)):
+        return None
+    val = tuple(colour)
+    for k, v in NAMED_COLOURS.items():
+        if v == val:
+            return k
+    # find nearest match
+    min_key = ""
+    min_diff = 1e9
+    for k, v in NAMED_COLOURS.items():
+        diff = math.sqrt(
+            (val[0] - v[0]) ** 2 + (val[1] - v[1]) ** 2 + (val[2] - v[2]) ** 2
+        )
+        if diff < min_diff:
+            min_diff = diff
+            min_key = k
+    return min_key
+
+
+def colour_name_from_hex(hexcode):
+    colour = rgb_from_hex(hexcode, as_uint8=True)
+    return colour_name_from_tuple(colour)
+
+
+def colour_from_name(name, as_float=False):
+    if name in NAMED_COLOURS:
+        x = NAMED_COLOURS[name]
+        if as_float:
+            return x[0] / 255, x[1] / 255, x[2] / 255
+        return x
+    return None

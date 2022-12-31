@@ -43,7 +43,7 @@ def main():
     elif argsd["folder"] is None:
         parser.print_help()
         exit()
-        
+
     dont_move = argsd["list"]
 
     fs = FileOps(simulate=False, verbose=True, overwrite=False)

@@ -4,7 +4,7 @@ import os
 
 # fmt: off
 __project__ = 'toolbox'
-__version__ = '0.6.1'
+__version__ = '0.6.2'
 # fmt: on
 
 VERSION = __project__ + "-" + __version__
@@ -33,5 +33,10 @@ from .geometry.point import (
     translate_points,
     points2d_at_height,
     centroid_of_points,
+    discretize_line,
+    discretize_polyline,
+    polyline_length,
 )
 from .geometry.rect import Rect
+
+from .geometry.animators import *

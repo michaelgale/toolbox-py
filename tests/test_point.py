@@ -80,3 +80,36 @@ def test_centroid():
     assert x == 1.25
     assert y == 1.75
     assert z == 0.75
+
+
+def test_discretize_line():
+    pts = discretize_line((0, 0), (1, 1), 4)
+    assert len(pts) == 5
+    assert pts[0] == (0, 0)
+    assert pts[1] == (0.25, 0.25)
+    assert pts[2] == (0.5, 0.5)
+    assert pts[3] == (0.75, 0.75)
+    assert pts[4] == (1, 1)
+
+    pts = discretize_line((0, 0), (1, 1), [0.1, 0.5, 0.8])
+    assert len(pts) == 4
+    assert pts[0] == (0, 0)
+    assert pts[1] == (0.1, 0.1)
+    assert pts[2] == (0.5, 0.5)
+    assert pts[3] == (0.8, 0.8)
+
+
+def test_discretize_poly():
+    pts = [(0, 0), (1, 0), (2, 0)]
+    vtx = discretize_polyline(pts, 10, keep_all_pts=False)
+    assert len(vtx) == 11
+    assert vtx[0] == (0, 0)
+    assert vtx[1] == (0.2, 0)
+    assert vtx[5] == (1.0, 0)
+    assert vtx[6] == (1.2, 0)
+    assert vtx[9] == (1.8, 0)
+    assert vtx[10] == (2.0, 0)
+
+    pts = [(0.25, 0.25), (0.75, 0.25), (0.75, 0.75), (0.25, 0.25)]
+    vtx = discretize_polyline(pts, 10)
+    # print(vtx)

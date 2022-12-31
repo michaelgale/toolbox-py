@@ -261,3 +261,26 @@ def test_country_lookup():
     s1 = "blah blah CA blah DE"
     s2 = replace_country_codes(s1)
     assert s2 == "blah blah Canada blah Germany"
+
+
+def test_colours():
+    c1 = rgb_from_hex("#000000")
+    assert c1 == (0.0, 0.0, 0.0)
+    c2 = rgb_from_hex("#FFFFFF")
+    assert c2 == (1.0, 1.0, 1.0)
+    c3 = rgb_from_hex("FFFFFF")
+    assert c3 == (1.0, 1.0, 1.0)
+    c2 = rgb_from_hex("#FFFFFF", as_uint8=True)
+    assert c2 == (255, 255, 255)
+    nc1 = colour_name_from_tuple((165, 42, 42))
+    assert nc1 == "brown"
+    nc2 = colour_name_from_tuple((46, 46, 46))
+    assert nc2 == "gray18"
+    c1 = colour_from_name("DarkOrchid")
+    assert c1 == (153, 50, 204)
+    c2 = colour_name_from_tuple((205, 38, 38))
+    assert c2 == "firebrick3"
+    c2 = colour_name_from_tuple((205, 38, 37))
+    assert c2 == "firebrick3"
+    c2 = colour_name_from_tuple((202, 38, 37))
+    assert c2 == "firebrick3"

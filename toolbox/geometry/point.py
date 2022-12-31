@@ -32,18 +32,18 @@ from functools import reduce
 
 
 class Point:
-    def __init__(self, x=0.0, y=0.0):
-        if isinstance(x, tuple):
-            self.x = x[0]
-            self.y = x[1]
-        elif isinstance(x, list):
-            if isinstance(x[0], tuple):
+    def __init__(self, x=0.0, y=None):
+        if isinstance(x, (tuple, list)):
+            if isinstance(x, list) and isinstance(x[0], tuple):
                 self.x = x[0][0]
                 self.y = x[0][1]
             else:
                 self.x = x[0]
                 self.y = x[1]
-        else:
+        if isinstance(x, Point):
+            self.x = x.x
+            self.y = x.y
+        elif y is not None:
             self.x = x
             self.y = y
 
@@ -214,6 +214,7 @@ def grid_points_2d(length, width, div, width_div=None):
             pts.append((x, y))
     return pts
 
+
 def translate_points(pts, dx, dy=None):
     if isinstance(dx, (tuple, list)):
         xo, yo = dx[0], dx[1]
@@ -254,3 +255,77 @@ def centroid_of_points(pts):
             zs /= len(pts)
             return xs, ys, zs
     return xs, ys
+
+
+def discretize_line(p0, p1, segments):
+    """Breaks up a line defined by points p0 and p1 into a number of
+    specified segments.
+    If segments is a scalar value, then the line is partitioned into
+    the number of segments.
+    If segments is a list, then each list value specifies a
+    normalized portion of the length of the line. e.g. [0.1, 0.5] would
+    request segments of 10%, 50% of the line length.
+    Returns the vertices of segments of discretized line."""
+    p0, p1 = Point(p0), Point(p1)
+    dx, dy = p1.x - p0.x, p1.y - p0.y
+    vtx = [Point(p0).as_tuple()]
+    if isinstance(segments, list):
+        for ds in segments:
+            x0 = p0.x + ds * dx
+            y0 = p0.y + ds * dy
+            vtx.append((x0, y0))
+        return vtx
+    for i in range(segments):
+        ds = (i + 1) / segments
+        x0 = p0.x + ds * dx
+        y0 = p0.y + ds * dy
+        vtx.append((x0, y0))
+    return vtx
+
+
+def polyline_length(pts):
+    """Computes the length of polyline."""
+    total_length = 0
+    p0 = Point(pts[0])
+    for p in pts[1:]:
+        p1 = Point(p)
+        total_length += p0.distance_to(p1)
+        p0 = p1
+    return total_length
+
+
+def discretize_polyline(pts, segments, keep_all_pts=True):
+    """Breaks up a polyline defined by points pts into a number of
+    specified segments.
+    If segments is a scalar value, then the polyline is partitioned into
+    the number of segments.
+    If segments is a list, then each list value specifies a
+    normalized portion of the total length of the polyline. e.g. [0.1, 0.5]
+    would request segments of 10%, 50% of the line length.
+    Returns the vertices of segments of discretized line."""
+    total_length = polyline_length(pts)
+    lines = []
+    p0 = Point(pts[0])
+    inc_length = 0
+    for p in pts[1:]:
+        p1 = Point(p)
+        line_length = p0.distance_to(p1)
+        lines.append((p0, p1, line_length, inc_length))
+        inc_length += line_length
+        p0 = p1
+    if isinstance(segments, (int, float)):
+        segments = [(x + 1) / segments for x in list(range(int(segments)))]
+    vtx = [Point(pts[0]).as_tuple()]
+    for i, segment in enumerate(segments):
+        ds = segment * total_length
+        for line in lines:
+            if ds <= (line[2] + line[3]):
+                dl = (ds - line[3]) / line[2]
+                v = discretize_line(line[0], line[1], [dl])
+                vtx.append(v[1])
+                if (i + 1) < len(segments) and keep_all_pts:
+                    dn = (segments[i + 1]) * total_length
+                    if (dn - line[3]) / line[2] > 1.0:
+                        vtx.append(line[1])
+                break
+    return vtx
