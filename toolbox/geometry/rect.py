@@ -629,3 +629,37 @@ class Rect:
                         new_rects.append(r)
 
         return new_rects
+
+
+class RectCell(Rect):
+    """A subclass of Rect which has extra meta information.
+    In addition to the attributes of Rect, this class has additional meta data associated with
+    a rectangle such as: row and column membership, horizontal and vertical alignment
+    """
+
+    def __init__(self, width=2.0, height=2.0, bottomUp=False, **kwargs):
+        super().__init__(width, height, bottomUp=bottomUp)
+        self.row = None
+        self.col = None
+        self.horz_align = "center"
+        self.vert_align = "centre"
+        for k, v in kwargs.items():
+            if k in self.__dict__:
+                self.__dict__[k] = v
+
+    def __str__(self):
+        return (
+            "<Rect (%.2f,%.2f)-(%.2f,%.2f) w=%.2f h=%.2f> row=%s col=%s ha=%s va=%s"
+            % (
+                self.left,
+                self.top,
+                self.right,
+                self.bottom,
+                self.width,
+                self.height,
+                self.row,
+                self.col,
+                self.horz_align,
+                self.vert_align,
+            )
+        )
