@@ -11,6 +11,14 @@ def test_rect_size():
     assert a.right == 5
     assert a.top == 2
     assert a.bottom == -2
+
+    assert a.top_left == (-5, 2)
+    assert a.top_right == (5, 2)
+    assert a.bottom_left == (-5, -2)
+    assert a.bottom_right == (5, -2)
+    assert a.area == 40
+    assert a.perimeter == 28
+
     a.bottom_up = True
     a.move_to(Point(0, 0))
     assert a.top == -2

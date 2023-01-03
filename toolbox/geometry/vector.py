@@ -208,6 +208,8 @@ def Identity():
 class Vector(object):
     """a Vector in 3D"""
 
+    __slots__ = ("x", "y", "z")
+
     def __init__(self, x, y=None, z=None):
         if isinstance(x, (tuple, list)):
             self.x = x[0]
@@ -259,8 +261,12 @@ class Vector(object):
         return self.x != other.x or self.y != other.y or self.z != other.z
 
     def __eq__(self, other):
-        if not isinstance(other, Vector):
-            return False
+        if not isinstance(other, self.__class__):
+            if not isinstance(other, (list, tuple)):
+                return False
+            if not len(other) == 3:
+                return False
+            return self.x == other[0] and self.y == other[1] and self.z == other[2]
         return self.x == other.x and self.y == other.y and self.z == other.z
 
     def __abs__(self):
@@ -377,6 +383,8 @@ class Vector(object):
 class Vector2D(object):
     """a Vector in 2D"""
 
+    __slots__ = ("x", "y")
+
     def __init__(self, x, y):
         self.x, self.y = x, y
 
@@ -447,145 +455,6 @@ class CoordinateSystem(object):
 
     def project(self, p):
         return Vector(p.dot(self.x), p.dot(self.y), p.dot(self.z))
-
-
-class Point:
-    def __init__(self, x=0.0, y=0.0):
-        if isinstance(x, tuple):
-            self.x = x[0]
-            self.y = x[1]
-        elif isinstance(x, list):
-            if isinstance(x[0], tuple):
-                self.x = x[0][0]
-                self.y = x[0][1]
-            else:
-                self.x = x[0]
-                self.y = x[1]
-        else:
-            self.x = x
-            self.y = y
-
-    def __add__(self, p):
-        """Point(x1+x2, y1+y2)"""
-        return Point(self.x + p.x, self.y + p.y)
-
-    def __sub__(self, p):
-        """Point(x1-x2, y1-y2)"""
-        return Point(self.x - p.x, self.y - p.y)
-
-    def __mul__(self, scalar):
-        """Point(x1*x2, y1*y2)"""
-        return Point(self.x * scalar, self.y * scalar)
-
-    def __div__(self, scalar):
-        """Point(x1/x2, y1/y2)"""
-        return Point(self.x / scalar, self.y / scalar)
-
-    def __str__(self):
-        if isinstance(self.x, float):
-            return "(%.2f, %.2f)" % (self.x, self.y)
-        else:
-            return "(%s, %s)" % (self.x, self.y)
-
-    def __repr__(self):
-        return "%s(%r, %r)" % (self.__class__.__name__, self.x, self.y)
-
-    def strspc(self):
-        if isinstance(self.x, float):
-            return "(%.3f %.3f)" % (self.x, self.y)
-        else:
-            return "(%s %s)" % (self.x, self.y)
-
-    def length(self):
-        return math.sqrt(self.x ** 2 + self.y ** 2)
-
-    def distance_to(self, p):
-        """Calculate the distance between two points."""
-        return (self - p).length()
-
-    def as_tuple(self):
-        """(x, y)"""
-        return (self.x, self.y)
-
-    def swapped(self):
-        return (self.y, self.x)
-
-    def clone(self):
-        """Return a full copy of this point."""
-        return Point(self.x, self.y)
-
-    def integerize(self):
-        """Convert co-ordinate values to integers."""
-        self.x = int(self.x)
-        self.y = int(self.y)
-
-    def floatize(self):
-        """Convert co-ordinate values to floats."""
-        self.x = float(self.x)
-        self.y = float(self.y)
-
-    def move_to(self, x, y):
-        """Reset x & y coordinates."""
-        self.x = x
-        self.y = y
-
-    def slide(self, p):
-        """Move to new (x+dx,y+dy).
-
-        Can anyone think up a better name for this function?
-        slide? shift? delta? move_by?
-        """
-        self.x = self.x + p.x
-        self.y = self.y + p.y
-
-    def slide_xy(self, dx, dy):
-        """Move to new (x+dx,y+dy).
-
-        Can anyone think up a better name for this function?
-        slide? shift? delta? move_by?
-        """
-        self.x = self.x + dx
-        self.y = self.y + dy
-
-    def offset(self, xoffset=0.0, yoffset=None):
-        if yoffset is not None:
-            return (self.x + xoffset, self.y + yoffset)
-        else:
-            return (self.x + xoffset, self.y + xoffset)
-
-    def mirror_y(self):
-        self.y = -self.y
-
-    def mirror_x(self):
-        self.x = -self.x
-
-    def rotate(self, rad):
-        """Rotate counter-clockwise by rad radians.
-
-        Positive y goes *up,* as in traditional mathematics.
-
-        Interestingly, you can use this in y-down computer graphics, if
-        you just remember that it turns clockwise, rather than
-        counter-clockwise.
-
-        The new position is returned as a new Point.
-        """
-        s, c = [f(rad) for f in (math.sin, math.cos)]
-        x, y = (c * self.x - s * self.y, s * self.x + c * self.y)
-        return Point(x, y)
-
-    def rotate_about(self, p, theta):
-        """Rotate counter-clockwise around a point, by theta degrees.
-
-        Positive y goes *up,* as in traditional mathematics.
-
-        The new position is returned as a new Point.
-        """
-        result = self.clone()
-        result.slide(-p.x, -p.y)
-        result.rotate(theta)
-        result.slide(p.x, p.y)
-        return result
 
 
 def euler_to_rot_matrix(euler):

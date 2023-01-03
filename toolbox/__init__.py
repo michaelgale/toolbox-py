@@ -4,7 +4,7 @@ import os
 
 # fmt: off
 __project__ = 'toolbox'
-__version__ = '0.6.2'
+__version__ = '0.7.0'
 # fmt: on
 
 VERSION = __project__ + "-" + __version__

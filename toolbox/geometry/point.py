@@ -32,6 +32,9 @@ from functools import reduce
 
 
 class Point:
+
+    __slots__ = ("x", "y")
+
     def __init__(self, x=0.0, y=None):
         if isinstance(x, (tuple, list)):
             if isinstance(x, list) and isinstance(x[0], tuple):
@@ -46,6 +49,17 @@ class Point:
         elif y is not None:
             self.x = x
             self.y = y
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        return self.x == other.x and self.y == other.y
+
+    def __lt__(self, other):
+        return self.length_squared() < other.length_squared()
+
+    def __hash__(self):
+        return hash((self.x, self.y))
 
     def __add__(self, p):
         """Point(x1+x2, y1+y2)"""
@@ -91,6 +105,9 @@ class Point:
 
     def length(self):
         return math.sqrt(self.x ** 2 + self.y ** 2)
+
+    def length_squared(self):
+        return self.x ** 2 + self.y ** 2
 
     def distance_to(self, p):
         """Calculate the distance between two points."""

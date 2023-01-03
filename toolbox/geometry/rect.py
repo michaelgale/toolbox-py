@@ -35,6 +35,8 @@ from .point import Point
 class Rect:
     """2D Rectangle class"""
 
+    __slots__ = ("width", "height", "left", "right", "top", "bottom", "bottom_up")
+
     def __init__(self, width=2.0, height=2.0, bottomUp=False):
         self.bottom_up = bottomUp
         self.left = -width / 2.0
@@ -65,6 +67,35 @@ class Rect:
             Point(self.right, self.bottom),
         )
 
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
+        return (
+            self.width == other.width
+            and self.height == other.height
+            and self.left == other.left
+            and self.top == other.top
+            and self.right == other.right
+            and self.bottom == other.bottom
+            and self.bottom_up == other.bottom_up
+        )
+
+    def __lt__(self, other):
+        return self.area < other.area
+
+    def __hash__(self):
+        return hash(
+            (
+                self.width,
+                self.height,
+                self.left,
+                self.top,
+                self.right,
+                self.bottom,
+                self.bottom_up,
+            )
+        )
+
     def copy(self):
         r = Rect(self.width, self.height)
         r.left, r.right = self.left, self.right
@@ -72,10 +103,26 @@ class Rect:
         r.bottom_up = self.bottom_up
         return r
 
+    @property
+    def area(self):
+        return self.width * self.height
+
+    @property
+    def perimeter(self):
+        return 2 * self.width + 2 * self.height
+
+    @property
+    def size(self):
+        return self.width, self.height
+
     def get_size(self):
         self.width = abs(self.right - self.left)
         self.height = abs(self.top - self.bottom)
         return self.width, self.height
+
+    @property
+    def centre(self):
+        return self.get_centre()
 
     def get_centre(self):
         x = self.left + self.width / 2
@@ -84,6 +131,10 @@ class Rect:
         else:
             y = self.top - self.height / 2
         return x, y
+
+    def iter_points(self):
+        for pt in self.get_pts():
+            yield pt
 
     def get_pts(self):
         return [
@@ -117,14 +168,30 @@ class Rect:
             self.top = y + self.height / 2
             self.bottom = y - self.height / 2
 
+    @property
+    def top_left(self):
+        return self.get_top_left()
+
     def get_top_left(self):
         return (self.left, self.top)
+
+    @property
+    def bottom_left(self):
+        return self.get_bottom_left()
 
     def get_bottom_left(self):
         return (self.left, self.bottom)
 
+    @property
+    def top_right(self):
+        return self.get_top_right()
+
     def get_top_right(self):
         return (self.right, self.top)
+
+    @property
+    def bottom_right(self):
+        return self.get_bottom_right()
 
     def get_bottom_right(self):
         return (self.right, self.bottom)
@@ -222,7 +289,7 @@ class Rect:
         """Makes a bounding rect from the extents of a list of points
         or a list of rects"""
         if len(pts) == 0:
-            return
+            return None
         bx = []
         by = []
         for pt in pts:
@@ -637,15 +704,23 @@ class RectCell(Rect):
     a rectangle such as: row and column membership, horizontal and vertical alignment
     """
 
+    __slots__ = ("row", "col", "horz_align", "vert_align")
+
     def __init__(self, width=2.0, height=2.0, bottomUp=False, **kwargs):
         super().__init__(width, height, bottomUp=bottomUp)
         self.row = None
         self.col = None
-        self.horz_align = "center"
-        self.vert_align = "centre"
+        self.horz_align = "left"
+        self.vert_align = "top"
         for k, v in kwargs.items():
-            if k in self.__dict__:
-                self.__dict__[k] = v
+            if k == "row":
+                self.row = kwargs["row"]
+            elif k == "col":
+                self.col = kwargs["col"]
+            elif k == "horz_align":
+                self.horz_align = kwargs["horz_align"]
+            elif k == "vert_align":
+                self.vert_align = kwargs["vert_align"]
 
     def __str__(self):
         return (
@@ -663,3 +738,15 @@ class RectCell(Rect):
                 self.vert_align,
             )
         )
+
+    @classmethod
+    def from_rect(cls, rect):
+        r = cls()
+        r.left = rect.left
+        r.right = rect.right
+        r.top = rect.top
+        r.bottom = rect.bottom
+        r.bottom_up = rect.bottom_up
+        r.width = rect.width
+        r.height = rect.height
+        return r

@@ -28,6 +28,10 @@ def test_equality():
     assert a.almost_same_as(c, 0.1)
     assert a.almost_same_as(c, 1e-3) == False
 
+    assert a == (1.0, 2.5, -5.2)
+    assert not a == (1.0, 2.5)
+    assert not a == (1.0, 2.5, -5.2, 4.0)
+
 
 def test_matrix_equality():
     a = Matrix([[1.1, 2.2, 3.3], [4.4, 5.5, 6.6], [7.7, 8.8, 9.9]])
