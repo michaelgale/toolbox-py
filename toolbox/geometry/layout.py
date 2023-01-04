@@ -27,6 +27,69 @@ import math
 from .rect import Rect, RectCell
 
 
+class LayoutResult:
+    def __init__(self, **kwargs):
+        self.whitespace = 0
+        self.distortion = 0
+        self.goal_shape = (1, 1)
+        self.shape = (1, 1)
+        self.extents = Rect(0, 0)
+        self.score = -1
+        self.whitespace_weight = 1.0
+        self.distortion_weight = 1.0
+        for k, v in kwargs.items():
+            if k in self.__dict__:
+                self.__dict__[k] = v
+
+    def __str__(self):
+        s = []
+        s.append(
+            "shape: %8s (%8s) whitespace: %8.3f distortion: %8.3f score: %8.3f %s"
+            % (
+                self.shape,
+                self.goal_shape,
+                self.whitespace,
+                self.distortion,
+                self.score,
+                self.extents,
+            )
+        )
+        return "".join(s)
+
+    @staticmethod
+    def normalize(results, key):
+        values = [result.__dict__[key] for result in results]
+        max_value = max(values)
+        values = [v / max_value for v in values]
+        return values
+
+    @staticmethod
+    def normalize_results(results):
+        norm_whitespace = LayoutResult.normalize(results, "whitespace")
+        norm_distortion = LayoutResult.normalize(results, "distortion")
+        for r, w, d in zip(results, norm_whitespace, norm_distortion):
+            r.whitespace = w
+            r.distortion = d
+            r.score = r.whitespace_weight * w + r.distortion_weight * d
+        return results
+
+    @staticmethod
+    def best_score(results):
+        min_score = results[0].score
+        best_result = results[0]
+        for r in results:
+            if r.score < min_score:
+                min_score = r.score
+                best_result = r
+        return best_result
+
+    @staticmethod
+    def best_result(results):
+        norm_results = LayoutResult.normalize_results(results)
+        best_score = LayoutResult.best_score(norm_results)
+        return best_score
+
+
 class RectLayout:
     def __init__(self, rects=None):
         self.rects = []
@@ -170,26 +233,15 @@ class RectLayout:
 
     @property
     def len_assigned(self):
-        assigned = 0
-        for r in self.iter_assigned():
-            assigned += 1
-        return assigned
+        return sum([1 for r in self.iter_assigned()])
 
     @property
     def row_count(self):
-        row_max = 0
-        for r in self.iter_assigned():
-            if r.row > row_max:
-                row_max = r.row
-        return row_max + 1
+        return max([r.row for r in self.iter_assigned()]) + 1
 
     @property
     def col_count(self):
-        col_max = 0
-        for r in self.iter_assigned():
-            if r.col > col_max:
-                col_max = r.col
-        return col_max + 1
+        return max([r.col for r in self.iter_assigned()]) + 1
 
     @property
     def shape(self):
@@ -251,59 +303,38 @@ class RectLayout:
         rect.row, rect.col = row, col
         rect.move_top_left_to((x, y))
 
+    def bounding_rect(self):
+        return Rect.bounding_rect_from_rects(self.rects)
+
     def row_width(self, row):
-        width = 0
-        for _, rect in self.iter_at_row(row):
-            width += rect.width
-        return width
+        return sum([r.width for _, r in self.iter_at_row(row)])
 
     def row_height(self, row):
-        height = 0
-        for _, rect in self.iter_at_row(row):
-            height = max(height, rect.height)
-        return height
+        return max([r.height for _, r in self.iter_at_row(row)])
 
     def row_top(self, row):
-        top = self[(row, 0)].top
-        for _, rect in self.iter_at_row(row):
-            top = max(top, rect.top)
-        return top
+        return max([r.top for _, r in self.iter_at_row(row)])
 
     def row_bottom(self, row):
         return self.row_top(row) + self.row_height(row)
 
     def row_col_count(self, row):
-        cols = 0
-        for _, _ in self.iter_at_row(row):
-            cols += 1
-        return cols
+        return sum([1 for _, _ in self.iter_at_row(row)])
 
     def col_height(self, col):
-        height = 0
-        for _, rect in self.iter_at_col(col):
-            height += rect.height
-        return height
+        return sum([r.height for _, r in self.iter_at_col(col)])
 
     def col_width(self, col):
-        width = 0
-        for _, rect in self.iter_at_col(col):
-            width = max(width, rect.width)
-        return width
+        return max([r.width for _, r in self.iter_at_col(col)])
 
     def col_left(self, col):
-        left = self[(0, col)].left
-        for _, rect in self.iter_at_col(col):
-            left = min(left, rect.left)
-        return left
+        return min([r.left for _, r in self.iter_at_col(col)])
 
     def col_right(self, col):
         return self.col_left(col) + self.col_width(col)
 
     def col_row_count(self, col):
-        rows = 0
-        for _, _ in self.iter_at_col(col):
-            rows += 1
-        return rows
+        return sum([1 for _, _ in self.iter_at_col(col)])
 
     def validate_shape(self, shape):
         if shape is None:
@@ -344,6 +375,14 @@ class RectLayout:
     @property
     def total_area(self):
         return self.bounding_rect().area
+
+    @property
+    def total_width(self):
+        return self.bounding_rect().width
+
+    @property
+    def total_height(self):
+        return self.bounding_rect().height
 
     @property
     def whitespace(self):
@@ -392,10 +431,9 @@ class RectLayout:
                 return False
         return True
 
-    def bounding_rect(self):
-        return Rect.bounding_rect_from_rects(self.rects)
-
-    def layout_row_wise(self, bounds, shape=None):
+    def layout_row_wise(
+        self, bounds, shape=None, hard_bounds_limit=False, grid_align=False
+    ):
         """Arranges rectangles row-wise within bounds.
         This will layout rectangles from left to right, top to bottom.
         If shape is specified, this will force row break to occur by shape columns rather
@@ -406,11 +444,15 @@ class RectLayout:
         if not self.validate_shape(shape):
             return
         for r in self.rects:
+            enough_space = row_width + r.width <= bounds.width
             if shape is not None:
-                enough_space = col < shape[1]
+                within_shape = col < shape[1]
+                row_break = not within_shape
+                if hard_bounds_limit:
+                    row_break = row_break or not enough_space
             else:
-                enough_space = row_width + r.width <= bounds.width
-            if enough_space:
+                row_break = not enough_space
+            if not row_break:
                 row_height = max(row_height, r.height)
                 row_width += r.width
                 self.assign_rect(r, row, col, x, y)
@@ -422,9 +464,14 @@ class RectLayout:
                 row_width, row_height = r.width, r.height
             col += 1
             x += r.width
-        self.align_rows_vert()
+        if grid_align:
+            self.align_grid()
+        else:
+            self.align_rows_vert()
 
-    def layout_col_wise(self, bounds, shape=None):
+    def layout_col_wise(
+        self, bounds, shape=None, hard_bounds_limit=False, grid_align=False
+    ):
         """Arranges rectangles column-wise within bounds.
         This will layout rectangles from top to bottom, left to right.
         If shape is specified, this will force column break to occur by shape rows rather
@@ -435,11 +482,15 @@ class RectLayout:
         if not self.validate_shape(shape):
             return
         for r in self.rects:
+            enough_space = col_height + r.height <= bounds.height
             if shape is not None:
-                enough_space = row < shape[0]
+                within_shape = row < shape[0]
+                col_break = not within_shape
+                if hard_bounds_limit:
+                    col_break = col_break or not enough_space
             else:
-                enough_space = col_height + r.height <= bounds.height
-            if enough_space:
+                col_break = not enough_space
+            if not col_break:
                 col_width = max(col_width, r.width)
                 col_height += r.height
                 self.assign_rect(r, row, col, x, y)
@@ -451,7 +502,10 @@ class RectLayout:
                 col_width, col_height = r.width, r.height
             row += 1
             y -= r.height
-        self.align_cols_horz()
+        if grid_align:
+            self.align_grid()
+        else:
+            self.align_cols_horz()
 
     def align_rows_vert(self):
         """Aligns each cell in a row with each cell's vertical alignment attribute"""
@@ -505,86 +559,38 @@ class RectLayout:
         y = (self.bounding_rect().height - bounds.height) / bounds.height
         return math.sqrt(x * x + y * y)
 
-    def auto_align(self, bounds, col_wise=False, grid_align=False):
-        # shapes = [(x+1, y+1) for x in range(len(self)) for y in range(len(self))]
-        # shapes = [(s[0], s[1]) for s in shapes if (s[0] * s[1]) >= len(self)]
-        # for shape in shapes:
-        #     self.layout_row_wise(bounds=bounds, shape=shape)
-        #     print("%8s %9.3f %9.3f %9.3f" %(shape, self.content_area, self.total_area, self.whitespace))
-        print(" ")
-        merits = []
-        max_distortion = 0
-        max_whitespace = 0
-        if col_wise:
-            for x in range(len(self)):
-                self.layout_col_wise(bounds=bounds, shape=(x + 1, len(self)))
-                if grid_align:
-                    self.align_grid()
-                distortion = self.distortion(bounds)
-                merit = 2 * self.whitespace + distortion
-                # print("col (%d, %d) %8.3f %8.3f %s %8.3f" % (x+1, len(self), self.whitespace, self.distortion(bounds), self.shape, merit))
-                merits.append((self.shape, self.whitespace, distortion))
-                if distortion > max_distortion:
-                    max_distortion = distortion
-                if self.whitespace > max_whitespace:
-                    max_whitespace = self.whitespace
-        else:
-            for y in range(len(self)):
-                self.layout_row_wise(bounds=bounds, shape=(len(self), y + 1))
-                if grid_align:
-                    self.align_grid()
-                distortion = self.distortion(bounds)
-                merit = 2 * self.whitespace + distortion
-                # print("row (%d, %d) %8.3f %8.3f %s %8.3f" % (len(self), y+1, self.whitespace, self.distortion(bounds), self.shape, merit))
-                merits.append((self.shape, self.whitespace, distortion))
-                if distortion > max_distortion:
-                    max_distortion = distortion
-                if self.whitespace > max_whitespace:
-                    max_whitespace = self.whitespace
-        merits_norm = []
-        for shape, ws, d in merits:
-            merits_norm.append(
-                (
-                    shape,
-                    ws / max_whitespace,
-                    d / max_distortion,
-                    ws / max_whitespace * d / max_distortion,
-                )
+    def optimize_layout(
+        self,
+        bounds,
+        col_wise=False,
+        hard_bounds_limit=False,
+        grid_align=False,
+        prioritize_whitespace=False,
+    ):
+
+        layout_fn = self.layout_col_wise if col_wise else self.layout_row_wise
+        results = []
+        for dim in range(len(self)):
+            shape = (dim + 1, len(self)) if col_wise else (len(self), dim + 1)
+            layout_fn(
+                bounds=bounds,
+                shape=shape,
+                hard_bounds_limit=hard_bounds_limit,
+                grid_align=grid_align,
             )
-        merits_norm.sort(key=lambda x: x[3])
-        for m in merits_norm:
-            print("%9s %8.3f %8.3f | %8.3f" % (m[0], m[1], m[2], m[3]))
-        min_merit = merits_norm[0][3]
-        min_shape = merits_norm[0][0]
-        print("Best merit: %8.3f with shape %s" % (min_merit, min_shape))
-        if col_wise:
-            self.layout_col_wise(bounds=bounds, shape=min_shape)
-        else:
-            self.layout_row_wise(bounds=bounds, shape=min_shape)
-        if grid_align:
-            self.align_grid()
-        self.print_grid(show_dim=True)
-        # return
-        # print(self)
-        # s = []
-        # s.append("%6s" %(""))
-        # for y in range(len(self)):
-        #     s.append("%8d" % (y+1))
-        # print("".join(s))
-        # for x in range(len(self)):
-        #     s = []
-        #     s.append("%5d " % (x+1))
-        #     for y in range(len(self)):
-        #         if ((x+1) * (y+1)) < len(self):
-        #             s.append("%8s" % (""))
-        #             continue
-        #         if col_wise:
-        #             self.layout_col_wise(bounds=bounds, shape=(x+1, y+1))
-        #         else:
-        #             self.layout_row_wise(bounds=bounds, shape=(x+1, y+1))
-        #         s.append("%8.3f" % (self.whitespace))
-        #         if col_wise:
-        #             break
-        #         elif ((len(self) - x) * (y - 1)) < (len(self) + 1):
-        #             break
-        #     print("".join(s))
+            result = LayoutResult(
+                goal_shape=shape,
+                whitespace=self.whitespace,
+                distortion=self.distortion(bounds),
+                shape=self.shape,
+                extents=self.bounding_rect(),
+                distortion_weight=0.0 if prioritize_whitespace else 1.0,
+            )
+            results.append(result)
+        best = LayoutResult.best_result(results)
+        layout_fn(
+            bounds=bounds,
+            shape=best.shape,
+            hard_bounds_limit=hard_bounds_limit,
+            grid_align=grid_align,
+        )

@@ -188,15 +188,59 @@ rects3 = [
 ]
 
 
-# def test_layout_whitespace():
-#     r1 = RectLayout(copy.deepcopy(rects3))
-#     bounds = Rect(8, 5)
-#     bounds.move_top_left_to((0, 10))
-#     r1.set_vert_align("centre")
-#     r1.set_horz_align("centre")
-#     r1.layout_row_wise(bounds=bounds)
+def test_auto_layout():
+    r1 = RectLayout(copy.deepcopy(rects3))
+    assert len(r1) == 14
+    assert r1.len_assigned == 0
+    bounds = Rect(6, 10)
+    bounds.move_top_left_to((0, 10))
+    r1.layout_row_wise(bounds=bounds, shape=(6, 6), hard_bounds_limit=False)
+    assert r1.len_assigned == 14
+    assert r1.shape == (3, 6)
+    r1.layout_row_wise(bounds=bounds, shape=(6, 6), hard_bounds_limit=True)
+    assert r1.len_assigned == 14
+    assert r1.shape == (5, 4)
+    assert r1.total_width <= bounds.width
 
-#     r1.auto_align(bounds=bounds)
-#     r1.auto_align(bounds=bounds, grid_align=True)
-#     r1.auto_align(bounds=bounds, col_wise=True)
-#     r1.auto_align(bounds=bounds, col_wise=True, grid_align=True)
+
+def test_layout_whitespace():
+    r1 = RectLayout(copy.deepcopy(rects3))
+    bounds = Rect(8, 5)
+    bounds.move_top_left_to((0, 10))
+    r1.set_vert_align("centre")
+    r1.set_horz_align("centre")
+    r1.optimize_layout(bounds=bounds, col_wise=False, grid_align=False)
+    assert r1.shape == (3, 5)
+
+    bounds = Rect(12, 5)
+    bounds.move_top_left_to((0, 10))
+    r1.optimize_layout(
+        bounds=bounds,
+        col_wise=False,
+        hard_bounds_limit=True,
+        grid_align=False,
+        prioritize_whitespace=False,
+    )
+    assert r1.shape == (3, 5)
+
+    r1.optimize_layout(
+        bounds=bounds,
+        col_wise=False,
+        hard_bounds_limit=False,
+        grid_align=False,
+        prioritize_whitespace=False,
+    )
+    assert r1.shape == (2, 7)
+
+    bounds = Rect(6, 8)
+    bounds.move_top_left_to((0, 10))
+    r1.set_vert_align("centre")
+    r1.set_horz_align("centre")
+    r1.optimize_layout(bounds=bounds, col_wise=True, grid_align=False)
+    assert r1.shape == (8, 2)
+    assert r1.bounding_rect().width == 6.5
+    assert r1.bounding_rect().height == 9.0
+    r1.optimize_layout(bounds=bounds, col_wise=True, grid_align=True)
+    assert r1.shape == (7, 2)
+    assert r1.bounding_rect().width == 6.5
+    assert r1.bounding_rect().height == 11.0
