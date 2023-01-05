@@ -29,6 +29,7 @@ import math
 from math import sin, cos, radians, sqrt, atan, degrees, atan2, hypot
 from numbers import Number
 from functools import reduce
+
 from .point import Point
 
 
@@ -531,171 +532,20 @@ class Rect:
         auto_adjust=True,
         align_cols=False,
     ):
-        def dict_idx(row, col):
-            return "%d_%d" % (row, col)
+        from .layout import RectLayout
 
-        def compute_wasted_space(rd, row_wise=True):
-            rows, cols = 0, 0
-            for k, v in rd.items():
-                row, col = k.split("_")
-                rows = max(rows, int(row))
-                cols = max(cols, int(col))
-            rows += 1
-            cols += 1
-            rws = []
-            if row_wise:
-                for row in range(rows):
-                    rw = 0
-                    for col in range(cols):
-                        if dict_idx(row, col) in rd:
-                            r = rd["%d_%d" % (row, col)]
-                            rw += r.width
-                    rws.append(rw)
-            else:
-                for col in range(cols):
-                    ch = 0
-                    for row in range(rows):
-                        if dict_idx(row, col) in rd:
-                            r = rd["%d_%d" % (row, col)]
-                            ch += r.height
-                    rws.append(ch)
-            if abs(max(rws)) > 0:
-                ws = (max(rws) - min(rws)) / max(rws)
-            else:
-                ws = 0
-            return ws
-
-        wasted_space = 1.0
-
-        times = 0 if auto_adjust else 9
-        last_wasted_space = 1.0
-        while (wasted_space > 0.25) and (times < 10):
-            rw, rh = 0, 0
-            cx, cy = bounds.left, bounds.top
-            rd = {}
-            row, col = 0, 0
-            if row_wise:
-                for r in rects:
-                    cw, ch = r.width, r.height
-                    if rw + cw <= bounds.width:
-                        rh = max(rh, ch)
-                        rw += cw
-                        r.move_top_left_to((cx, cy))
-                        rd[dict_idx(row, col)] = r
-                        cx += cw
-                        col += 1
-                    else:
-                        # overflowed width, go to next row
-                        rw, col = 0, 0
-                        row += 1
-                        # print("OVERFLOW before setting cx,cy row=%d col=%d rw=%.1f rh=%.1f cw=%.1f ch=%.1f cx=%.1f cy=%.1f" % (row, col, rw, rh, cw, ch, cx, cy))
-
-                        cx, cy = bounds.left, cy - rh
-                        r.move_top_left_to((cx, cy))
-                        # print("OVERFLOW after setting cx,cy row=%d col=%d rw=%.1f rh=%.1f cw=%.1f ch=%.1f cx=%.1f cy=%.1f" % (row, col, rw, rh, cw, ch, cx, cy))
-                        rd[dict_idx(row, col)] = r
-                        col += 1
-                        cx += cw
-                        rw, rh = cw, ch
-                    # print("Rect: %s" % (r))
-                    # print("row=%d col=%d rw=%.1f rh=%.1f cw=%.1f ch=%.1f cx=%.1f cy=%.1f" % (row, col, rw, rh, cw, ch, cx, cy))
-            else:
-                for r in rects:
-                    cw, ch = r.width, r.height
-                    if rh + ch <= bounds.height:
-                        rw = max(rw, cw)
-                        rh += ch
-                        r.move_top_left_to((cx, cy))
-                        rd[dict_idx(row, col)] = r
-                        cy -= ch
-                        row += 1
-                    else:
-                        # overflowed height, go to next col
-                        rh, row = 0, 0
-                        col += 1
-                        cx, cy = cx + rw, bounds.top
-                        r.move_top_left_to((cx, cy))
-                        rd[dict_idx(row, col)] = r
-                        row += 1
-                        cy -= ch
-                        rw, rh = cw, ch
-            last_wasted_space = wasted_space
-            wasted_space = compute_wasted_space(rd, row_wise=row_wise)
-            if wasted_space > last_wasted_space:
-                if row_wise:
-                    bounds.right += 0.05 * bounds.width
-                    bounds.width = bounds.right - bounds.left
-                else:
-                    bounds.bottom -= 0.05 * bounds.height
-                    bounds.height = abs(bounds.bottom - bounds.top)
-                times = 9
-            else:
-                if row_wise:
-                    bounds.right -= 0.05 * bounds.width
-                    bounds.width = bounds.right - bounds.left
-                else:
-                    bounds.bottom += 0.05 * bounds.height
-                    bounds.height = abs(bounds.bottom - bounds.top)
-                times += 1
-
-        # Re-align each row or column based on vert_align and horz_align respectively
-        rows, cols = 0, 0
-        for k, v in rd.items():
-            row, col = k.split("_")
-            rows = max(rows, int(row))
-            cols = max(cols, int(col))
-        rows += 1
-        cols += 1
-        new_rects = []
-        col_widths = [0] * cols
-        for row in range(rows):
-            for col in range(cols):
-                if dict_idx(row, col) in rd:
-                    col_widths[col] = max(col_widths[col], rd[dict_idx(row, col)].width)
-
-        if row_wise:
-            for row in range(rows):
-                rh = 0
-                for col in range(cols):
-                    if dict_idx(row, col) in rd:
-                        rh = max(rh, rd[dict_idx(row, col)].height)
-                for col in range(cols):
-                    if dict_idx(row, col) in rd:
-                        r = copy.copy(rd[dict_idx(row, col)])
-                        if col == 0:
-                            cx = r.left
-                        if vert_align == "bottom":
-                            r.move_bottom_left_to((cx, r.top - rh))
-                        elif vert_align == "centre":
-                            r.move_top_left_to((cx, r.top - rh / 2 + r.height / 2))
-                        else:
-                            r.move_top_left_to((cx, r.top))
-                        if align_cols:
-                            r.set_size_anchored(col_widths[col], r.height, "left")
-                        cx += r.width
-                        new_rects.append(r)
-        else:
-            for col in range(cols):
-                cw = 0
-                for row in range(rows):
-                    if dict_idx(row, col) in rd:
-                        cw = max(cw, rd[dict_idx(row, col)].width)
-                for row in range(rows):
-                    if dict_idx(row, col) in rd:
-                        r = copy.copy(rd[dict_idx(row, col)])
-                        if horz_align == "right":
-                            r.move_top_left_to((r.left + cw - r.width, r.top))
-                            # r.set_size_anchored(col_widths[col], r.height, "right")
-                        elif horz_align == "centre":
-                            r.move_top_left_to((r.left + cw / 2 - r.width / 2, r.top))
-                        else:
-                            r.move_top_left_to((r.left, r.top))
-                            # r.set_size_anchored(col_widths[col], r.height, "centre")
-                        # else:
-                        # r.set_size_anchored(col_widths[col], r.height, "left")
-                        new_rects.append(r)
-
-        return new_rects
+        r = RectLayout(copy.deepcopy(rects))
+        r.set_vert_align(vert_align)
+        r.set_horz_align(horz_align)
+        r.optimize_layout(
+            bounds=bounds,
+            col_wise=not row_wise,
+            hard_bounds_limit=False,
+            grid_align=align_cols,
+            prioritize_whitespace=False,
+            strategy="resize",
+        )
+        return [rect.as_rect() for rect in r.iter_assigned()]
 
 
 class RectCell(Rect):
@@ -738,6 +588,15 @@ class RectCell(Rect):
                 self.vert_align,
             )
         )
+
+    def as_rect(self):
+        r = Rect(self.width, self.height)
+        r.left = self.left
+        r.right = self.right
+        r.top = self.top
+        r.bottom = self.bottom
+        r.bottom_up = self.bottom_up
+        return r
 
     @classmethod
     def from_rect(cls, rect):

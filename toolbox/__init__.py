@@ -37,7 +37,7 @@ from .geometry.point import (
     discretize_polyline,
     polyline_length,
 )
-from .geometry.rect import Rect, RectCell
-from .geometry.layout import RectLayout
+from .geometry.rect import *
+from .geometry.layout import *
 
 from .geometry.animators import *
