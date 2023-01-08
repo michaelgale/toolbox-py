@@ -531,19 +531,24 @@ class Rect:
         horz_align="left",
         auto_adjust=True,
         align_cols=False,
+        **kwargs,
     ):
         from .layout import RectLayout
 
+        if not "strategy" in kwargs:
+            if auto_adjust:
+                kwargs["strategy"] = "resize"
+            else:
+                kwargs["strategy"] = "none"
         r = RectLayout(copy.deepcopy(rects))
         r.set_vert_align(vert_align)
         r.set_horz_align(horz_align)
         r.optimize_layout(
             bounds=bounds,
             col_wise=not row_wise,
-            hard_bounds_limit=False,
+            hard_bounds_limit=True,
             grid_align=align_cols,
-            prioritize_whitespace=False,
-            strategy="resize",
+            **kwargs,
         )
         return [rect.as_rect() for rect in r.iter_assigned()]
 

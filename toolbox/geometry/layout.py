@@ -584,16 +584,30 @@ class RectLayout:
         col_wise=False,
         hard_bounds_limit=False,
         grid_align=False,
-        prioritize_whitespace=False,
-        strategy="reshape",
+        debug=False,
+        **kwargs,
     ):
+        strategy = "none"
+        if "strategy" in kwargs:
+            strategy = kwargs["strategy"]
         if not len(self.rects) > 0:
             return
         layout_fn = self.layout_col_wise if col_wise else self.layout_row_wise
+        if debug:
+            print(
+                "optimize_layout: strategy=%s col_wise=%s hard_limit=%s grid_align=%s"
+                % (strategy, col_wise, hard_bounds_limit, grid_align)
+            )
         results = []
         if strategy == "reshape":
-            for dim in range(len(self)):
-                shape = (dim + 1, len(self)) if col_wise else (len(self), dim + 1)
+            dim_max = len(self)
+            dim_min = 0
+            if "full_reshape" in kwargs:
+                if not kwargs["full_reshape"]:
+                    dim_max = int(0.8 * len(self))
+                    dim_min = int(0.2 * len(self))
+            for dim in range(dim_min, dim_max):
+                shape = (dim + 1, dim_max) if col_wise else (dim_max, dim + 1)
                 layout_fn(
                     bounds=bounds,
                     shape=shape,
@@ -606,10 +620,38 @@ class RectLayout:
                     distortion=self.distortion(bounds),
                     shape=self.shape,
                     extents=self.bounding_rect(),
-                    distortion_weight=0.0 if prioritize_whitespace else 1.0,
                 )
+                if "distortion_weight" in kwargs:
+                    result.distortion_weight = kwargs["distortion_weight"]
+                if "whitespace_weight" in kwargs:
+                    result.distortion_weight = kwargs["whitespace_weight"]
                 results.append(result)
+                if debug:
+                    print(
+                        "  shape: %s of (%d, %d) actual: %s whitespace=%.3f distortion=%.3f w=%.3f h=%.3f"
+                        % (
+                            shape,
+                            dim_min,
+                            dim_max,
+                            self.shape,
+                            self.whitespace,
+                            self.distortion(bounds),
+                            self.total_width,
+                            self.total_height,
+                        )
+                    )
             best = LayoutResult.best_result(results)
+            if debug:
+                print(
+                    "  Best: shape: %s whitespace=%.3f distortion=%.3f w=%.3f h=%.3f"
+                    % (
+                        best.shape,
+                        self.whitespace,
+                        self.distortion(bounds),
+                        self.total_width,
+                        self.total_height,
+                    )
+                )
             layout_fn(
                 bounds=bounds,
                 shape=best.shape,
@@ -627,7 +669,26 @@ class RectLayout:
             whitespace = (
                 self.col_wise_whitespace if col_wise else self.row_wise_whitespace
             )
-            while whitespace > 0.25 and times < 20:
+            best_whitespace = whitespace
+            best_bounds = bounds.copy()
+            whitespace_thr = 0.25
+            bounds_adj = 0.05
+            if "whitespace_thr" in kwargs:
+                whitespace_thr = kwargs["whitespace_thr"]
+            if "bounds_adj" in kwargs:
+                bounds_adj = kwargs["bounds_adj"]
+            if debug:
+                print(
+                    "  whitespace=%.3f thr=%.3f best=%.3f w=%.3f h=%.3f"
+                    % (
+                        whitespace,
+                        whitespace_thr,
+                        best_whitespace,
+                        bounds.width,
+                        bounds.height,
+                    )
+                )
+            while whitespace > whitespace_thr and times < 20:
                 layout_fn(
                     bounds=bounds,
                     shape=None,
@@ -638,13 +699,42 @@ class RectLayout:
                 whitespace = (
                     self.col_wise_whitespace if col_wise else self.row_wise_whitespace
                 )
-                if whitespace < last_whitespace:
+                times += 1
+                if whitespace < best_whitespace:
+                    best_whitespace = whitespace
+                    best_bounds = bounds.copy()
+                if debug:
+                    print(
+                        "  whitespace=%.3f thr=%.3f best=%.3f w=%.3f h=%.3f"
+                        % (
+                            whitespace,
+                            whitespace_thr,
+                            best_whitespace,
+                            bounds.width,
+                            bounds.height,
+                        )
+                    )
+                if whitespace <= last_whitespace and whitespace <= best_whitespace:
                     if col_wise:
-                        bounds.bottom += 0.05 * bounds.height
+                        bounds.bottom += bounds_adj * bounds.height
                         bounds.height = abs(bounds.bottom - bounds.top)
                     else:
-                        bounds.right -= 0.05 * bounds.width
+                        bounds.right -= bounds_adj * bounds.width
                         bounds.width = bounds.right - bounds.left
                 else:
-                    break
-                times += 1
+                    if whitespace > best_whitespace:
+                        layout_fn(
+                            bounds=best_bounds,
+                            shape=None,
+                            hard_bounds_limit=hard_bounds_limit,
+                            grid_align=grid_align,
+                        )
+                        return
+
+        else:
+            layout_fn(
+                bounds=bounds,
+                shape=None,
+                hard_bounds_limit=hard_bounds_limit,
+                grid_align=grid_align,
+            )

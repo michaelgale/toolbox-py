@@ -209,8 +209,10 @@ def test_layout_whitespace():
     bounds.move_top_left_to((0, 10))
     r1.set_vert_align("centre")
     r1.set_horz_align("centre")
-    r1.optimize_layout(bounds=bounds, col_wise=False, grid_align=False)
-    assert r1.shape == (3, 5)
+    r1.optimize_layout(
+        bounds=bounds, col_wise=False, grid_align=False, strategy="resize"
+    )
+    assert r1.shape == (4, 4)
 
     bounds = Rect(12, 5)
     bounds.move_top_left_to((0, 10))
@@ -219,28 +221,26 @@ def test_layout_whitespace():
         col_wise=False,
         hard_bounds_limit=True,
         grid_align=False,
-        prioritize_whitespace=False,
     )
-    assert r1.shape == (3, 5)
+    assert r1.shape == (3, 7)
 
     r1.optimize_layout(
         bounds=bounds,
         col_wise=False,
         hard_bounds_limit=False,
         grid_align=False,
-        prioritize_whitespace=False,
     )
-    assert r1.shape == (2, 7)
+    assert r1.shape == (3, 7)
 
     bounds = Rect(6, 8)
     bounds.move_top_left_to((0, 10))
     r1.set_vert_align("centre")
     r1.set_horz_align("centre")
     r1.optimize_layout(bounds=bounds, col_wise=True, grid_align=False)
-    assert r1.shape == (8, 2)
-    assert r1.bounding_rect().width == 6.5
-    assert r1.bounding_rect().height == 9.0
+    assert r1.shape == (7, 3)
+    assert r1.bounding_rect().width == 8.5
+    assert r1.bounding_rect().height == 7.5
     r1.optimize_layout(bounds=bounds, col_wise=True, grid_align=True)
-    assert r1.shape == (7, 2)
-    assert r1.bounding_rect().width == 6.5
-    assert r1.bounding_rect().height == 11.0
+    assert r1.shape == (7, 3)
+    assert r1.bounding_rect().width == 8.5
+    assert r1.bounding_rect().height == 10
