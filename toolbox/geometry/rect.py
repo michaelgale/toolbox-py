@@ -114,7 +114,7 @@ class Rect:
 
     @property
     def size(self):
-        return self.width, self.height
+        return self.get_size()
 
     def get_size(self):
         self.width = abs(self.right - self.left)
@@ -506,7 +506,6 @@ class Rect:
 
     def expanded_by(self, n):
         """Return a rectangle with extended borders.
-
         Create a new rectangle that is wider and taller than the
         immediate one. All sides are extended by "n" points.
         """

@@ -38,7 +38,7 @@ class LayoutResult:
         self.whitespace_weight = 1.0
         self.distortion_weight = 1.0
         for k, v in kwargs.items():
-            if k in self.__dict__:
+            if k in self.__dict__ and v is not None:
                 self.__dict__[k] = v
 
     def __str__(self):
@@ -587,6 +587,41 @@ class RectLayout:
         debug=False,
         **kwargs,
     ):
+        """Optimize the layout of rectangles based on different strategies.
+        Rectangles are arranged in a container rectangle specified by bounds. The
+        layout will progress either row or column wise until all the rectangles are
+        arranged.  After arrangement, an optimization strategy will attempt a "better"
+        layout guided by goals such as reducing whitespace, distortion, etc.
+        strategy == "none"
+            A basic procedural layout either row or column wise within a specified bound
+        strategy == "reshape"
+            A strategy which attempts different row x column shapes within the limits of
+            the number of child rectangles.  The "best" layout is chosen based on a
+            weighted score of "distortion" (the deviation of the layout aspect ratio
+            vs. the container rectangle aspect ratio) and "whitespace" (the ratio of
+            content space area vs. overall container rectangle area).  A bias towards
+            whitespace will attempt to avoid "jagged edges" tending towards more justified
+            boundaries.  A bias towards distortion will attempt to maintain aspect ratio
+            similar to the container rectangle.
+            Parameters:
+            full_reshape - if True, then reshape over the full range of shapes including
+                            single column/row layouts.
+                            if False, restrict the reshaping over 20-80% of possible shapes
+                            avoiding extreme layout aspect ratios
+            distortion_weight - importance of distortion 0.0 to 1.0
+            whitespace_weight - importance of reducing whitespace 0.0 to 1.0
+        strategy == "resize"
+            A strategy which performs procedural layout (row or column wise) but
+            adjusts the size of the container rectangle progressively to achieve a
+            better whitespace score.  The best whitespace space score and corresponding
+            container rectangle size are used when the whitespace has dipped below a
+            target whitespace threshold or when the whitespace score starts to get
+            worse.
+            Parameter:
+            whitespace_thr - the target whitespace ratio to achieve (default=0.25)
+            bounds_adj - the percentage change of container rectangle dimension for
+                         each iteration (default=0.05, i.e. 5% steps)
+        """
         strategy = "none"
         if "strategy" in kwargs:
             strategy = kwargs["strategy"]
@@ -624,7 +659,7 @@ class RectLayout:
                 if "distortion_weight" in kwargs:
                     result.distortion_weight = kwargs["distortion_weight"]
                 if "whitespace_weight" in kwargs:
-                    result.distortion_weight = kwargs["whitespace_weight"]
+                    result.whitespace_weight = kwargs["whitespace_weight"]
                 results.append(result)
                 if debug:
                     print(
@@ -715,6 +750,7 @@ class RectLayout:
                         )
                     )
                 if whitespace <= last_whitespace and whitespace <= best_whitespace:
+                    # adjust container bounds by a fixed percentage
                     if col_wise:
                         bounds.bottom += bounds_adj * bounds.height
                         bounds.height = abs(bounds.bottom - bounds.top)
@@ -722,6 +758,8 @@ class RectLayout:
                         bounds.right -= bounds_adj * bounds.width
                         bounds.width = bounds.right - bounds.left
                 else:
+                    # the whitespace is getting worse, therefore fallback to
+                    # the container bounds which achieved the best whitespace score
                     if whitespace > best_whitespace:
                         layout_fn(
                             bounds=best_bounds,
@@ -732,6 +770,7 @@ class RectLayout:
                         return
 
         else:
+            # basic procedural layout either row or column wise
             layout_fn(
                 bounds=bounds,
                 shape=None,
