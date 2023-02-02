@@ -437,3 +437,26 @@ def colour_from_name(name, as_float=False):
             return x[0] / 255, x[1] / 255, x[2] / 255
         return x
     return None
+
+
+def high_contrast_complement(colour):
+    level = colour[0] ** 2 + colour[1] ** 2 + colour[2] ** 2
+    if level < 1.25:
+        return (1.0, 1.0, 1.0)
+    return (0.0, 0.0, 0.0)
+
+
+def safe_colour_tuple(colour, as_float=True):
+    if isinstance(colour, str):
+        if colour in NAMED_COLOURS:
+            return colour_from_name(colour, as_float=as_float)
+        return rgb_from_hex(colour, as_uint8=not as_float)
+    elif isinstance(colour, (tuple, list)):
+        if as_float and any([c > 1 for c in colour]):
+            return tuple([c / 255 for c in colour])
+        return tuple(colour)
+    elif isinstance(colour, (int, float)):
+        c = int(colour)
+        if c in LDRAW_COLOURS:
+            return rgb_from_hex(LDRAW_COLOURS[c], as_uint8=not as_float)
+    return (0, 0, 0)

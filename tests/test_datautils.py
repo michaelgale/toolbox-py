@@ -263,6 +263,12 @@ def test_country_lookup():
     assert s2 == "blah blah Canada blah Germany"
 
 
+def almost_same(x, y):
+    if any([abs(x[i] - y[i]) > 2e-3 for i in range(3)]):
+        return False
+    return True
+
+
 def test_colours():
     c1 = rgb_from_hex("#000000")
     assert c1 == (0.0, 0.0, 0.0)
@@ -284,3 +290,14 @@ def test_colours():
     assert c2 == "firebrick3"
     c2 = colour_name_from_tuple((202, 38, 37))
     assert c2 == "firebrick3"
+
+    cs = safe_colour_tuple("#808080")
+    assert almost_same(cs, (0.5, 0.5, 0.5))
+    cs = safe_colour_tuple("gray18")
+    assert almost_same(cs, (0.18, 0.18, 0.18))
+    cs = safe_colour_tuple((205, 40, 80))
+    assert almost_same(cs, (0.803, 0.156, 0.313))
+    cs = safe_colour_tuple(15)
+    assert almost_same(cs, (1, 1, 1))
+    cs = safe_colour_tuple(71, as_float=False)
+    assert almost_same(cs, (int("a0", 16), int("a5", 16), int("a9", 16)))
