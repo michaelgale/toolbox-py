@@ -41,13 +41,13 @@ def test_layout():
     assert r1.row_count == 4
     assert r1.col_count == 3
     assert fits == True
-    assert r1.row_col_count(0) == 3
-    assert r1.row_col_count(1) == 1
-    assert r1.row_col_count(2) == 2
-    assert r1.row_col_count(3) == 1
-    assert r1.col_row_count(0) == 4
-    assert r1.col_row_count(1) == 2
-    assert r1.col_row_count(2) == 1
+    assert r1.cols_at_row(0) == 3
+    assert r1.cols_at_row(1) == 1
+    assert r1.cols_at_row(2) == 2
+    assert r1.cols_at_row(3) == 1
+    assert r1.rows_at_col(0) == 4
+    assert r1.rows_at_col(1) == 2
+    assert r1.rows_at_col(2) == 1
     assert r1.row_width(0) == 4.5
     assert r1.row_height(0) == 1.0
     assert r1.col_width(0) == 3.0
@@ -83,9 +83,9 @@ def test_layout_shape():
     r1.layout_row_wise(bounds=bounds, shape=(3, 3))
     assert r1.shape == (3, 3)
     assert r1.len_assigned == 7
-    assert r1.row_col_count(0) == 3
-    assert r1.row_col_count(1) == 3
-    assert r1.row_col_count(2) == 1
+    assert r1.cols_at_row(0) == 3
+    assert r1.cols_at_row(1) == 3
+    assert r1.cols_at_row(2) == 1
     with pytest.raises(TypeError):
         r1.layout_row_wise(bounds, shape=2)
     with pytest.raises(ValueError):

@@ -145,7 +145,7 @@ class RectLayout:
             s = []
             s.append("%5d: " % (row))
             for col in range(self.col_count):
-                rect = self.rect_at(row, col)
+                rect = self[row, col]
                 if rect is not None:
                     sfmt = "|%%%ds" % (col_width)
                     swh = "%.2f, %.2f" % (rect.width, rect.height)
@@ -159,7 +159,7 @@ class RectLayout:
                 s = []
                 s.append("       ")
                 for col in range(self.col_count):
-                    rect = self.rect_at(row, col)
+                    rect = self[row, col]
                     if rect is not None:
                         sfmt = "|%%-%ds" % (col_width)
                         swh = "     %.2f" % (rect.top)
@@ -172,7 +172,7 @@ class RectLayout:
                 s = []
                 s.append("       ")
                 for col in range(self.col_count):
-                    rect = self.rect_at(row, col)
+                    rect = self[row, col]
                     if rect is not None:
                         sfmt = "|%%-%ds" % (col_width)
                         swh = " %.2f %.2f" % (rect.left, rect.right)
@@ -185,7 +185,7 @@ class RectLayout:
                 s = []
                 s.append("       ")
                 for col in range(self.col_count):
-                    rect = self.rect_at(row, col)
+                    rect = self[row, col]
                     if rect is not None:
                         sfmt = "|%%-%ds" % (col_width)
                         swh = "     %.2f" % (rect.bottom)
@@ -206,7 +206,7 @@ class RectLayout:
                 "row %d: cols: %d width: %.3f height: %.3f"
                 % (
                     row,
-                    self.row_col_count(row),
+                    self.cols_at_row(row),
                     self.row_width(row),
                     self.row_height(row),
                 )
@@ -218,7 +218,7 @@ class RectLayout:
                 "col %d: rows: %d width: %.3f height: %.3f"
                 % (
                     col,
-                    self.col_row_count(col),
+                    self.rows_at_col(col),
                     self.col_width(col),
                     self.col_height(col),
                 )
@@ -276,7 +276,7 @@ class RectLayout:
         """Iterates row-wise across all rects, returning only valid rects, skipping empty cells"""
         for row in range(self.row_count):
             for col in range(self.col_count):
-                r = self.rect_at(row, col)
+                r = self[row, col]
                 if r is None:
                     continue
                 yield row, col, r
@@ -285,7 +285,7 @@ class RectLayout:
         """Iterates column-wise across all rects, returning only valid rects, skipping empty cells"""
         for col in range(self.col_count):
             for row in range(self.row_count):
-                r = self.rect_at(row, col)
+                r = self[row, col]
                 if r is None:
                     continue
                 yield row, col, r
@@ -293,7 +293,7 @@ class RectLayout:
     def iter_at_row(self, row):
         """Iterates columns at a row, returning only valid rects, skipping empty cells"""
         for col in range(self.col_count):
-            r = self.rect_at(row, col)
+            r = self[row, col]
             if r is None:
                 continue
             yield col, r
@@ -301,7 +301,7 @@ class RectLayout:
     def iter_at_col(self, col):
         """Iterates rows at a column, returning only valid rects, skipping empty cells"""
         for row in range(self.row_count):
-            r = self.rect_at(row, col)
+            r = self[row, col]
             if r is None:
                 continue
             yield row, r
@@ -325,9 +325,9 @@ class RectLayout:
         return max([r.top for _, r in self.iter_at_row(row)])
 
     def row_bottom(self, row):
-        return self.row_top(row) + self.row_height(row)
+        return min([r.bottom for _, r in self.iter_at_row(row)])
 
-    def row_col_count(self, row):
+    def cols_at_row(self, row):
         return sum([1 for _, _ in self.iter_at_row(row)])
 
     def col_height(self, col):
@@ -340,9 +340,9 @@ class RectLayout:
         return min([r.left for _, r in self.iter_at_col(col)])
 
     def col_right(self, col):
-        return self.col_left(col) + self.col_width(col)
+        return max([r.right for _, r in self.iter_at_col(col)])
 
-    def col_row_count(self, col):
+    def rows_at_col(self, col):
         return sum([1 for _, _ in self.iter_at_col(col)])
 
     def validate_shape(self, shape):
@@ -558,8 +558,7 @@ class RectLayout:
         if not self.len_assigned > 0:
             return
         x, y = self.col_left(0), self.row_top(0)
-        col_x = [x]
-        col_y = [y]
+        col_x, col_y = [x], [y]
         for col in range(0, self.col_count - 1):
             x += self.col_width(col)
             col_x.append(x)
@@ -568,7 +567,7 @@ class RectLayout:
             col_y.append(y)
         for row, y in zip(list(range(self.row_count)), col_y):
             for col, x in zip(list(range(self.col_count)), col_x):
-                rect = self.rect_at(row, col)
+                rect = self[row, col]
                 if rect is None:
                     continue
                 rect.move_top_left_to((x, y))

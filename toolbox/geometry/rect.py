@@ -274,18 +274,7 @@ class Rect:
 
     def set_points(self, pt1, pt2):
         """Reset the rectangle coordinates."""
-        x1, y1 = self._xy_from_pt(pt1)
-        x2, y2 = self._xy_from_pt(pt2)
-        self.left = min(x1, x2)
-        self.right = max(x1, x2)
-        if self.bottom_up:
-            self.top = min(y1, y2)
-            self.bottom = max(y1, y2)
-        else:
-            self.top = max(y1, y2)
-            self.bottom = min(y1, y2)
-        self.width = abs(x2 - x1)
-        self.height = abs(y2 - y1)
+        self.bounding_rect([pt1, pt2])
 
     def bounding_rect(self, pts):
         """Makes a bounding rect from the extents of a list of points
@@ -316,6 +305,7 @@ class Rect:
             self.bottom = min(by)
         self.width = abs(self.right - self.left)
         self.height = abs(self.top - self.bottom)
+        return self
 
     def set_size(self, width, height):
         """Sets a new size for the rectangle."""
@@ -376,10 +366,10 @@ class Rect:
             y1, y2 = y2, y1
         self.set_points((x1, y1), (x2, y2))
 
-    def anchor_to_pt(self, rect, from_pt="centre centre", to_pt="centre centre"):
+    def anchor_to_pt(self, other, from_pt="centre centre", to_pt="centre centre"):
         """Moves a rectangle from its anchor point to another rectangle's
         anchor point. Example: "top right" to "bottom left" """
-        x, y = rect.get_anchor_pt(to_pt)
+        x, y = other.get_anchor_pt(to_pt)
         if "left_quarter" in from_pt:
             x1 = x - self.width / 4
             x2 = max(x, self.right) if "resize" in to_pt else x1 + self.width
@@ -422,11 +412,11 @@ class Rect:
             y1, y2 = min(y2, y1), max(y2, y1)
         self.set_points((x1, y1), (x2, y2))
 
-    def anchor_to_rect(self, rect, anchor_pt="centre centre"):
+    def anchor_to_rect(self, other, anchor_pt="centre centre"):
         """Moves rectangle to an anchor reference of another rectangle.
         'top left' moves this rectangle to the other rectangle's top left
         for example."""
-        self.anchor_to_pt(rect, anchor_pt, anchor_pt)
+        self.anchor_to_pt(other, anchor_pt, anchor_pt)
 
     def anchor_with_constraint(self, rect, constraint):
         """Moves a rectangle from its anchor point to another rectangle's
@@ -436,11 +426,11 @@ class Rect:
             self.anchor_to_pt(rect, from_pt="top", to_pt="bottom")
         elif c == "above":
             self.anchor_to_pt(rect, from_pt="bottom", to_pt="top")
-        elif c == "rightof":
+        elif c in ["rightof", "right_of"]:
             self.anchor_to_pt(rect, from_pt="left", to_pt="right")
-        elif c == "leftof":
+        elif c in ["leftof", "left_of"]:
             self.anchor_to_pt(rect, from_pt="right", to_pt="left")
-        elif c == "middleof":
+        elif c in ["middleof", "middle_of"]:
             self.anchor_to_pt(rect, from_pt="centre", to_pt="centre")
         else:
             c = constraint.split()
@@ -505,13 +495,21 @@ class Rect:
                 and self.bottom < other.top
             )
 
-    def expanded_by(self, n):
+    def expanded_by(self, offset):
         """Return a rectangle with extended borders.
         Create a new rectangle that is wider and taller than the
-        immediate one. All sides are extended by "n" points.
+        immediate one. All sides are extended by "offset" units.
         """
-        p1 = Point(self.left - n, self.top + n)
-        p2 = Point(self.right + n, self.bottom - n)
+        if isinstance(offset, (list, tuple)):
+            off_x, off_y = offset[0], offset[1]
+        else:
+            off_x, off_y = offset, offset
+        if self.bottom_up:
+            p1 = Point(self.left - off_x, self.top - off_y)
+            p2 = Point(self.right + off_x, self.bottom + off_y)
+        else:
+            p1 = Point(self.left - off_x, self.top + off_y)
+            p2 = Point(self.right + off_x, self.bottom - off_y)
         r = Rect()
         r.set_points(p1, p2)
         return r
@@ -519,8 +517,12 @@ class Rect:
     @staticmethod
     def bounding_rect_from_rects(rects):
         r = Rect()
-        r.bounding_rect(rects)
-        return r
+        return r.bounding_rect(rects)
+
+    @staticmethod
+    def rect_from_points(top_left, bottom_right):
+        r = Rect()
+        return r.bounding_rect([top_left, bottom_right])
 
     @staticmethod
     def layout_rects(
@@ -650,67 +652,61 @@ class RectCell(Rect):
     @staticmethod
     def cols_at_row(rects, row):
         cols = 0
-        for rect in rects:
-            if rect.row == row:
-                cols = max(cols, rect.col)
+        for rect in [r for r in rects if r.row == row]:
+            cols = max(cols, rect.col)
         return cols + 1
 
     @staticmethod
     def rows_at_col(rects, col):
         rows = 0
-        for rect in rects:
-            if rect.col == col:
-                rows = max(rows, rect.row)
+        for rect in [r for r in rects if r.col == col]:
+            rows = max(rows, rect.row)
         return rows + 1
 
     @staticmethod
     def max_right_at_col(rects, col):
         max_right = None
-        for rect in rects:
-            if rect.col == col:
-                if max_right is None:
-                    max_right = rect.right
-                else:
-                    max_right = max(max_right, rect.right)
+        for rect in [r for r in rects if r.col == col]:
+            if max_right is None:
+                max_right = rect.right
+            else:
+                max_right = max(max_right, rect.right)
         return max_right
 
     @staticmethod
     def min_left_at_col(rects, col):
         min_left = None
-        for rect in rects:
-            if rect.col == col:
-                if min_left is None:
-                    min_left = rect.left
-                else:
-                    min_left = min(min_left, rect.left)
+        for rect in [r for r in rects if r.col == col]:
+            if min_left is None:
+                min_left = rect.left
+            else:
+                min_left = min(min_left, rect.left)
         return min_left
 
     @staticmethod
     def min_bottom_at_row(rects, row):
         min_bottom = None
-        for rect in rects:
-            if rect.row == row:
-                if min_bottom is None:
-                    min_bottom = rect.bottom
-                else:
-                    min_bottom = min(min_bottom, rect.bottom)
+        for rect in [r for r in rects if r.row == row]:
+            if min_bottom is None:
+                min_bottom = rect.bottom
+            else:
+                min_bottom = min(min_bottom, rect.bottom)
         return min_bottom
 
     @staticmethod
     def max_top_at_row(rects, row):
         max_top = None
-        for rect in rects:
-            if rect.row == row:
-                if max_top is None:
-                    max_top = rect.top
-                else:
-                    max_top = max(max_top, rect.top)
+        for rect in [r for r in rects if r.row == row]:
+            if max_top is None:
+                max_top = rect.top
+            else:
+                max_top = max(max_top, rect.top)
         return max_top
 
     @staticmethod
     def vert_gutters_from_rects(rects, ignore_single=False):
         """Computes if rectangular vertical gutters exist between a grid of rects."""
-        rows, cols = RectCell.shape_from_rects(rects)
+        _, cols = RectCell.shape_from_rects(rects)
         if cols < 2:
             return None
         gutters = []
@@ -735,7 +731,7 @@ class RectCell(Rect):
     @staticmethod
     def horz_gutters_from_rects(rects, ignore_single=False):
         """Computes if rectangular horz gutters exist between a grid of rects."""
-        rows, cols = RectCell.shape_from_rects(rects)
+        rows, _ = RectCell.shape_from_rects(rects)
         if rows < 2:
             return None
         gutters = []

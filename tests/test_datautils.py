@@ -306,3 +306,16 @@ def test_colours():
     assert ch == "#008040"
     ch = rgb_to_hex((0.5, 0, 1.0))
     assert ch == "#7F00FF"
+
+
+def test_clamp():
+    x = clamp_value(3, 1, 5)
+    assert x == 3
+    x = clamp_value(-3, 1, 5)
+    assert x == 1
+    x = clamp_value(10, 1, 5)
+    assert x == 5
+    x = clamp_value(3, 5, 1)
+    assert x == 5
+    x = clamp_value(10, 5, 1)
+    assert x == 5
