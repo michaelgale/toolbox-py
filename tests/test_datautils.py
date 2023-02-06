@@ -301,3 +301,8 @@ def test_colours():
     assert almost_same(cs, (1, 1, 1))
     cs = safe_colour_tuple(71, as_float=False)
     assert almost_same(cs, (int("a0", 16), int("a5", 16), int("a9", 16)))
+
+    ch = rgb_to_hex((0, 128, 64))
+    assert ch == "#008040"
+    ch = rgb_to_hex((0.5, 0, 1.0))
+    assert ch == "#7F00FF"

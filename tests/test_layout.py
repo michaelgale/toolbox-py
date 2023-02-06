@@ -166,8 +166,31 @@ def test_layout_align_grid():
     assert r1.len_assigned == 7
     r1.align_grid()
 
+
+def test_layout_gutters():
+    r1 = RectLayout(copy.deepcopy(rects2))
+    assert len(r1) == 7
+    assert r1.len_assigned == 0
+    bounds = Rect(5, 5)
+    bounds.move_top_left_to((0, 10))
+    r1.set_vert_align("top")
+    r1.set_horz_align("left")
+    r1.layout_row_wise(bounds=bounds)
+    assert r1.total_height == 6.0
+    assert RectCell.shape_from_rects(r1.rects) == (4, 3)
+    assert len(RectCell.horz_gutters_from_rects(r1.rects)) == 0
+    r1.add_row_gutters(height=0.5)
+    assert r1.total_height == 7.5
+    assert RectCell.shape_from_rects(r1.rects) == (4, 3)
+    assert len(RectCell.horz_gutters_from_rects(r1.rects)) == 3
     r1.layout_col_wise(bounds=bounds)
-    r1.align_grid()
+    assert r1.total_width == 5.5
+    assert RectCell.shape_from_rects(r1.rects) == (4, 2)
+    assert len(RectCell.vert_gutters_from_rects(r1.rects)) == 0
+    r1.add_col_gutters(width=0.5)
+    assert r1.total_width == 6.0
+    assert RectCell.shape_from_rects(r1.rects) == (4, 2)
+    assert len(RectCell.vert_gutters_from_rects(r1.rects)) == 1
 
 
 rects3 = [

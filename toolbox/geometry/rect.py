@@ -154,6 +154,7 @@ class Rect:
         ]
 
     def move_to(self, pt, py=None):
+        """Move rect to new centre point"""
         if isinstance(pt, Point):
             (x, y) = pt.as_tuple()
         elif isinstance(pt, tuple):
@@ -549,7 +550,31 @@ class Rect:
             grid_align=align_cols,
             **kwargs,
         )
+        if "as_rect" in kwargs:
+            if not kwargs["as_rect"]:
+                return [rect for rect in r.iter_assigned()]
         return [rect.as_rect() for rect in r.iter_assigned()]
+
+    @staticmethod
+    def get_best_rect_metrics(from_width, from_height, in_width, in_height, tol=1e-3):
+        if from_width < tol or from_height < tol:
+            return 0, 0
+        if from_width > from_height:
+            best_height = in_height
+            best_width = (in_height / from_height) * from_width
+        else:
+            best_width = in_width
+            best_height = (in_width / from_width) * from_height
+
+        if best_height > in_height:
+            scale = in_height / best_height
+            best_height *= scale
+            best_width *= scale
+        if best_width > in_width:
+            scale = in_width / best_width
+            best_height *= scale
+            best_width *= scale
+        return best_width, best_height
 
 
 class RectCell(Rect):
@@ -613,3 +638,121 @@ class RectCell(Rect):
         r.width = rect.width
         r.height = rect.height
         return r
+
+    @staticmethod
+    def shape_from_rects(rects):
+        rows, cols = 0, 0
+        for rect in rects:
+            rows = max(rows, rect.row)
+            cols = max(cols, rect.col)
+        return rows + 1, cols + 1
+
+    @staticmethod
+    def cols_at_row(rects, row):
+        cols = 0
+        for rect in rects:
+            if rect.row == row:
+                cols = max(cols, rect.col)
+        return cols + 1
+
+    @staticmethod
+    def rows_at_col(rects, col):
+        rows = 0
+        for rect in rects:
+            if rect.col == col:
+                rows = max(rows, rect.row)
+        return rows + 1
+
+    @staticmethod
+    def max_right_at_col(rects, col):
+        max_right = None
+        for rect in rects:
+            if rect.col == col:
+                if max_right is None:
+                    max_right = rect.right
+                else:
+                    max_right = max(max_right, rect.right)
+        return max_right
+
+    @staticmethod
+    def min_left_at_col(rects, col):
+        min_left = None
+        for rect in rects:
+            if rect.col == col:
+                if min_left is None:
+                    min_left = rect.left
+                else:
+                    min_left = min(min_left, rect.left)
+        return min_left
+
+    @staticmethod
+    def min_bottom_at_row(rects, row):
+        min_bottom = None
+        for rect in rects:
+            if rect.row == row:
+                if min_bottom is None:
+                    min_bottom = rect.bottom
+                else:
+                    min_bottom = min(min_bottom, rect.bottom)
+        return min_bottom
+
+    @staticmethod
+    def max_top_at_row(rects, row):
+        max_top = None
+        for rect in rects:
+            if rect.row == row:
+                if max_top is None:
+                    max_top = rect.top
+                else:
+                    max_top = max(max_top, rect.top)
+        return max_top
+
+    @staticmethod
+    def vert_gutters_from_rects(rects, ignore_single=False):
+        """Computes if rectangular vertical gutters exist between a grid of rects."""
+        rows, cols = RectCell.shape_from_rects(rects)
+        if cols < 2:
+            return None
+        gutters = []
+        bounds = Rect.bounding_rect_from_rects(rects)
+        for col in range(1, cols):
+            both_single = (
+                RectCell.rows_at_col(rects, col) == 1
+                and RectCell.rows_at_col(rects, col - 1) == 1
+            )
+            if ignore_single and both_single:
+                continue
+            max_right = RectCell.max_right_at_col(rects, col - 1)
+            min_left = RectCell.min_left_at_col(rects, col)
+            if max_right is not None and min_left is not None:
+                gutter_width = min_left - max_right
+                if gutter_width > 0:
+                    gr = Rect(gutter_width, bounds.height)
+                    gr.move_top_left_to((max_right, bounds.top))
+                    gutters.append(gr)
+        return gutters
+
+    @staticmethod
+    def horz_gutters_from_rects(rects, ignore_single=False):
+        """Computes if rectangular horz gutters exist between a grid of rects."""
+        rows, cols = RectCell.shape_from_rects(rects)
+        if rows < 2:
+            return None
+        gutters = []
+        bounds = Rect.bounding_rect_from_rects(rects)
+        for row in range(1, rows):
+            both_single = (
+                RectCell.cols_at_row(rects, row) == 1
+                and RectCell.cols_at_row(rects, row - 1) == 1
+            )
+            if ignore_single and both_single:
+                continue
+            min_bottom = RectCell.min_bottom_at_row(rects, row - 1)
+            max_top = RectCell.max_top_at_row(rects, row)
+            if max_top is not None and min_bottom is not None:
+                gutter_height = min_bottom - max_top
+                if gutter_height > 0:
+                    gr = Rect(bounds.width, gutter_height)
+                    gr.move_top_left_to((bounds.left, min_bottom))
+                    gutters.append(gr)
+        return gutters

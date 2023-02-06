@@ -405,6 +405,13 @@ def rgb_from_hex(hexcode, as_uint8=False):
     return r, g, b
 
 
+def rgb_to_hex(rgb):
+    if any([c > 1 for c in rgb]):
+        return "#%02X%02X%02X" % (rgb[0], rgb[1], rgb[2])
+    h = tuple(int(c * 255) for c in rgb)
+    return "#%02X%02X%02X" % (h)
+
+
 def colour_name_from_tuple(colour):
     if not isinstance(colour, (list, tuple)):
         return None
@@ -460,3 +467,9 @@ def safe_colour_tuple(colour, as_float=True):
         if c in LDRAW_COLOURS:
             return rgb_from_hex(LDRAW_COLOURS[c], as_uint8=not as_float)
     return (0, 0, 0)
+
+
+def clamp_value(v, min_value, max_value):
+    cv = min(v, max_value)
+    cv = max(cv, min_value)
+    return cv

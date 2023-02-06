@@ -441,7 +441,7 @@ class RectLayout:
         return True
 
     def layout_row_wise(
-        self, bounds, shape=None, hard_bounds_limit=False, grid_align=False
+        self, bounds, shape=None, hard_bounds_limit=False, grid_align=False, gutter=0
     ):
         """Arranges rectangles row-wise within bounds.
         This will layout rectangles from left to right, top to bottom.
@@ -478,9 +478,11 @@ class RectLayout:
             self.align_grid()
         else:
             self.align_rows_vert()
+        if gutter > 0:
+            self.add_row_gutters(height=gutter)
 
     def layout_col_wise(
-        self, bounds, shape=None, hard_bounds_limit=False, grid_align=False
+        self, bounds, shape=None, hard_bounds_limit=False, grid_align=False, gutter=0
     ):
         """Arranges rectangles column-wise within bounds.
         This will layout rectangles from top to bottom, left to right.
@@ -517,6 +519,8 @@ class RectLayout:
             self.align_grid()
         else:
             self.align_cols_horz()
+        if gutter > 0:
+            self.add_col_gutters(width=gutter)
 
     def align_rows_vert(self):
         """Aligns each cell in a row with each cell's vertical alignment attribute"""
@@ -570,6 +574,26 @@ class RectLayout:
                 rect.move_top_left_to((x, y))
         self.align_rows_vert()
         self.align_cols_horz()
+
+    def add_col_gutters(self, width):
+        """Adds a gutter region between each column"""
+        if not self.len_assigned > 0:
+            return
+        for col in range(1, self.col_count):
+            x = col * width
+            for _, rect in self.iter_at_col(col):
+                tl = (rect.left + x, rect.top)
+                rect.move_top_left_to(tl)
+
+    def add_row_gutters(self, height):
+        """Adds a gutter region between each row"""
+        if not self.len_assigned > 0:
+            return
+        for row in range(1, self.row_count):
+            y = row * height
+            for _, rect in self.iter_at_row(row):
+                tl = (rect.left, rect.top - y)
+                rect.move_top_left_to(tl)
 
     def distortion(self, bounds):
         if not abs(bounds.width) > 0 or not abs(bounds.height) > 0:
@@ -628,6 +652,14 @@ class RectLayout:
         if not len(self.rects) > 0:
             return
         layout_fn = self.layout_col_wise if col_wise else self.layout_row_wise
+        gutter = 0
+        if "gutter" in kwargs:
+            gutter = kwargs["gutter"]
+        layout_kw = {
+            "hard_bounds_limit": hard_bounds_limit,
+            "grid_align": grid_align,
+            "gutter": gutter,
+        }
         if debug:
             print(
                 "optimize_layout: strategy=%s col_wise=%s hard_limit=%s grid_align=%s"
@@ -641,14 +673,12 @@ class RectLayout:
                 if not kwargs["full_reshape"]:
                     dim_max = int(0.8 * len(self))
                     dim_min = int(0.2 * len(self))
+                    if dim_min * dim_max < len(self):
+                        dim_max = len(self)
+                        dim_min = 0
             for dim in range(dim_min, dim_max):
                 shape = (dim + 1, dim_max) if col_wise else (dim_max, dim + 1)
-                layout_fn(
-                    bounds=bounds,
-                    shape=shape,
-                    hard_bounds_limit=hard_bounds_limit,
-                    grid_align=grid_align,
-                )
+                layout_fn(bounds=bounds, shape=shape, **layout_kw)
                 result = LayoutResult(
                     goal_shape=shape,
                     whitespace=self.whitespace,
@@ -687,20 +717,10 @@ class RectLayout:
                         self.total_height,
                     )
                 )
-            layout_fn(
-                bounds=bounds,
-                shape=best.shape,
-                hard_bounds_limit=hard_bounds_limit,
-                grid_align=grid_align,
-            )
+            layout_fn(bounds=bounds, shape=best.shape, **layout_kw)
         elif strategy == "resize":
             times = 0
-            layout_fn(
-                bounds=bounds,
-                shape=None,
-                hard_bounds_limit=hard_bounds_limit,
-                grid_align=grid_align,
-            )
+            layout_fn(bounds=bounds, shape=None, **layout_kw)
             whitespace = (
                 self.col_wise_whitespace if col_wise else self.row_wise_whitespace
             )
@@ -724,12 +744,7 @@ class RectLayout:
                     )
                 )
             while whitespace > whitespace_thr and times < 20:
-                layout_fn(
-                    bounds=bounds,
-                    shape=None,
-                    hard_bounds_limit=hard_bounds_limit,
-                    grid_align=grid_align,
-                )
+                layout_fn(bounds=bounds, shape=None, **layout_kw)
                 last_whitespace = whitespace
                 whitespace = (
                     self.col_wise_whitespace if col_wise else self.row_wise_whitespace
@@ -761,19 +776,9 @@ class RectLayout:
                     # the whitespace is getting worse, therefore fallback to
                     # the container bounds which achieved the best whitespace score
                     if whitespace > best_whitespace:
-                        layout_fn(
-                            bounds=best_bounds,
-                            shape=None,
-                            hard_bounds_limit=hard_bounds_limit,
-                            grid_align=grid_align,
-                        )
+                        layout_fn(bounds=best_bounds, shape=None, **layout_kw)
                         return
 
         else:
             # basic procedural layout either row or column wise
-            layout_fn(
-                bounds=bounds,
-                shape=None,
-                hard_bounds_limit=hard_bounds_limit,
-                grid_align=grid_align,
-            )
+            layout_fn(bounds=bounds, shape=None, **layout_kw)
