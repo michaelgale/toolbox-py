@@ -50,7 +50,7 @@ class Animator:
         as_frames=None,
         as_time=None,
         offset_from_previous=None,
-        value_from_previous=None,
+        previous_to_value=None,
     ):
         self.fps = fps
         use_frames = not as_time and (as_frames is not None and as_frames)
@@ -67,13 +67,13 @@ class Animator:
         self.curr_value = 0
         self.link_to_previous = False
         self.offset_from_previous = 0
-        self.value_from_previous = None
+        self.previous_to_value = None
         if offset_from_previous is not None:
             self.link_to_previous = True
             self.offset_from_previous = offset_from_previous
-        elif value_from_previous is not None:
+        elif previous_to_value is not None:
             self.link_to_previous = True
-            self.value_from_previous = value_from_previous
+            self.previous_to_value = previous_to_value
         if append_to is not None:
             self.append_to_animator(append_to)
 
@@ -546,7 +546,9 @@ class AnimatorGroup:
 
     def value_at_time(self, t):
         if self.fps is None:
-            raise ValueError("value_at_time cannot be used without specified fps")
+            raise ValueError(
+                "value_at_time cannot be used without specified fps attribute"
+            )
         return self.value_at_frame(t * self.fps)
 
     def value_at_frame(self, frame=None):
@@ -562,11 +564,11 @@ class AnimatorGroup:
                 if a.is_active(self.curr_frame):
                     if a.link_to_previous:
                         a.start_value = last_stop_value
-                        if a.value_from_previous is not None:
-                            a.stop_value = a.value_from_previous
+                        if a.previous_to_value is not None:
+                            a.stop_value = a.previous_to_value
                         else:
                             a.stop_value = last_stop_value + a.offset_from_previous
-                    self.curr_value = a.value_at_frame(frame)
+                    self.curr_value = a[frame]
                     break
                 last_stop_value = a.stop_value
         return self.curr_value

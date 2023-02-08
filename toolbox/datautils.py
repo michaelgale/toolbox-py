@@ -24,6 +24,8 @@
 # Misc data manipulation and validation functions
 #
 import math
+import numpy as np
+import cv2
 import re
 import string
 import pycountry
@@ -391,6 +393,8 @@ def replace_country_codes(text):
 
 
 def rgb_from_hex(hexcode, as_uint8=False):
+    """Returns RGB tuple from hex code string.
+    RGB can be scaled as 8-bit ints or floating point 0.0 to 1.0."""
     if len(hexcode) < 6:
         return 0, 0, 0
     hs = hexcode.lstrip("#")
@@ -406,13 +410,37 @@ def rgb_from_hex(hexcode, as_uint8=False):
 
 
 def rgb_to_hex(rgb):
+    """Returns hex RGB string from a tuple of RGB.
+    Automatically determines if input tuple is scaled from 0 to 1 or 0 to 255."""
     if any([c > 1 for c in rgb]):
         return "#%02X%02X%02X" % (rgb[0], rgb[1], rgb[2])
     h = tuple(int(c * 255) for c in rgb)
     return "#%02X%02X%02X" % (h)
 
 
+def rgb_to_hsv(rgb):
+    """Converts colour RGB tuple to HSV tuple."""
+    rgb = safe_colour_tuple(rgb, as_float=False)
+    bgr = np.zeros(shape=(1, 1, 3), dtype=np.uint8)
+    bgr[0][0] = [rgb[2], rgb[1], rgb[0]]
+    hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
+    v = hsv[0][0]
+    return (v[0], v[1], v[2])
+
+
+def hsv_to_rgb(hsv, as_float=False):
+    """Converts colour HSV tuple to RGB tuple.
+    RGB can be scaled as 8-bit ints or floating point 0.0 to 1.0."""
+    c = np.zeros(shape=(1, 1, 3), dtype=np.uint8)
+    c[0][0] = [hsv[0], hsv[1], hsv[2]]
+    bgr = cv2.cvtColor(c, cv2.COLOR_HSV2BGR)
+    v = bgr[0][0]
+    rgb = (v[2], v[1], v[0])
+    return safe_colour_tuple(rgb, as_float=as_float)
+
+
 def colour_name_from_tuple(colour):
+    """Returns a standard colour name from a RGB colour tuple."""
     if not isinstance(colour, (list, tuple)):
         return None
     val = tuple(colour)
@@ -433,11 +461,13 @@ def colour_name_from_tuple(colour):
 
 
 def colour_name_from_hex(hexcode):
+    """Returns a standard colour name from a RGB hex code."""
     colour = rgb_from_hex(hexcode, as_uint8=True)
     return colour_name_from_tuple(colour)
 
 
 def colour_from_name(name, as_float=False):
+    """Converts a standard colour name to a RGB tuple."""
     if name in NAMED_COLOURS:
         x = NAMED_COLOURS[name]
         if as_float:
@@ -447,6 +477,7 @@ def colour_from_name(name, as_float=False):
 
 
 def high_contrast_complement(colour):
+    """Estimates either a black or white colour as a high contrast complement to another colour."""
     level = colour[0] ** 2 + colour[1] ** 2 + colour[2] ** 2
     if level < 1.25:
         return (1.0, 1.0, 1.0)
@@ -454,6 +485,9 @@ def high_contrast_complement(colour):
 
 
 def safe_colour_tuple(colour, as_float=True):
+    """Returns a RGB colour tuple from a variety of different input colour types.
+    The input type is automatically determined and mapped to a standard RGB
+    tuple representation scaled either as uint8 or 0.0 to 1.0 floats."""
     if isinstance(colour, str):
         if colour in NAMED_COLOURS:
             return colour_from_name(colour, as_float=as_float)
@@ -461,6 +495,8 @@ def safe_colour_tuple(colour, as_float=True):
     elif isinstance(colour, (tuple, list)):
         if as_float and any([c > 1 for c in colour]):
             return tuple([c / 255 for c in colour])
+        elif not as_float and not any([c > 1 for c in colour]):
+            return tuple([int(min(255, c * 256)) for c in colour])
         return tuple(colour)
     elif isinstance(colour, (int, float)):
         c = int(colour)
@@ -469,7 +505,14 @@ def safe_colour_tuple(colour, as_float=True):
     return (0, 0, 0)
 
 
-def clamp_value(v, min_value, max_value):
-    cv = min(v, max_value)
-    cv = max(cv, min_value)
+def clamp_value(v, min_value, max_value, auto_limit=False):
+    """Clamps an input value between a minimum and maximum range.
+    auto_limit ensures that min and max bounds are ordered as min and max and
+    swaps them if required."""
+    min_v, max_v = min_value, max_value
+    if auto_limit:
+        max_v = max(min_value, max_value)
+        min_v = min(min_value, max_value)
+    cv = min(v, max_v)
+    cv = max(cv, min_v)
     return cv

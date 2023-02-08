@@ -307,6 +307,27 @@ def test_colours():
     ch = rgb_to_hex((0.5, 0, 1.0))
     assert ch == "#7F00FF"
 
+    cvs = [
+        ((255, 0, 0), (0, 255, 255)),
+        ((0, 255, 0), (60, 255, 255)),
+        ((0, 0, 255), (120, 255, 255)),
+        ((0, 0, 128), (120, 255, 128)),
+        ((128, 128, 128), (0, 0, 128)),
+        ((0.5, 0.5, 0.5), (0, 0, 128)),
+        ("#00FF00", (60, 255, 255)),
+    ]
+    for rgb, hsv in cvs:
+        cv = rgb_to_hsv(rgb)
+        assert cv == hsv
+
+    for rgb, hsv in cvs:
+        cv = hsv_to_rgb(hsv)
+        srgb = safe_colour_tuple(rgb, as_float=False)
+        assert cv == srgb
+
+    assert rgb_to_hsv(15) == (0, 0, 255)
+    assert rgb_to_hsv(4) == (3, 244, 201)
+
 
 def test_clamp():
     x = clamp_value(3, 1, 5)

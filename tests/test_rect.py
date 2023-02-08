@@ -251,6 +251,78 @@ def test_shove_bound():
     assert pt2 == (0, 1)
 
 
+def test_regions():
+    import pprint
+
+    r1 = Rect(10, 5)
+    q1 = r1.quadrants()
+    assert q1["top_left"] == Rect.rect_from_points((-5, 2.5), (0, 0))
+    assert q1["top_right"] == Rect.rect_from_points((0, 2.5), (5, 0))
+    assert q1["bottom_left"] == Rect.rect_from_points((-5, 0), (0, -2.5))
+    assert q1["bottom_right"] == Rect.rect_from_points((0, 0), (5, -2.5))
+    r2 = Rect(10, 5)
+    r2.bottom_up = True
+    r2.move_top_left_to((0, 0))
+    q2 = r2.quadrants()
+    assert q2["top_left"] == Rect.rect_from_points((0, 0), (5, 2.5), bottom_up=True)
+    assert q2["top_right"] == Rect.rect_from_points((5, 0), (10, 2.5), bottom_up=True)
+    assert q2["bottom_left"] == Rect.rect_from_points((0, 2.5), (5, 5), bottom_up=True)
+    assert q2["bottom_right"] == Rect.rect_from_points(
+        (5, 2.5), (10, 5), bottom_up=True
+    )
+    r3 = Rect(30, 60)
+    r3.move_top_left_to((0, 60))
+    q3 = r3.regions()
+    assert q3["top_left"] == Rect.rect_from_points((0, 60), (10, 40))
+    assert q3["top_right"] == Rect.rect_from_points((20, 60), (30, 40))
+    assert q3["bottom_left"] == Rect.rect_from_points((0, 20), (10, 0))
+    assert q3["bottom_right"] == Rect.rect_from_points((20, 20), (30, 0))
+    r4 = Rect(30, 60)
+    r4.bottom_up = True
+    r4.move_top_left_to((0, 0))
+    q4 = r4.regions()
+    assert q4["top_left"] == Rect.rect_from_points((0, 0), (10, 20), bottom_up=True)
+    assert q4["top_right"] == Rect.rect_from_points((20, 0), (30, 20), bottom_up=True)
+    assert q4["bottom_left"] == Rect.rect_from_points((0, 40), (10, 60), bottom_up=True)
+    assert q4["bottom_right"] == Rect.rect_from_points(
+        (20, 40), (30, 60), bottom_up=True
+    )
+
+
+def test_map_pt():
+    r1 = Rect(10, 5)
+    r2 = Rect.rect_from_points((0, 0), (512, 256), bottom_up=True)
+    r2.move_top_left_to((0, 0))
+    pts = [
+        ((-5, 0), (0, 128)),
+        ((0, 2.5), (256, 0)),
+        ((0, 0), (256, 128)),
+        ((0, -2.5), (256, 256)),
+        ((5, 2.5), (512, 0)),
+        ((2.5, 0), (384, 128)),
+    ]
+    for pt, mpt in pts:
+        mp = r1.map_pt_in_other_rect(r2, pt)
+        assert mp == mpt
+
+    r1 = Rect(10, 5)
+    r2 = Rect(4, 6)
+    pts = [
+        ((-5, 2.5), (-2, 3)),
+        ((0, 0), (0, 0)),
+        ((5, -2.5), (2, -3)),
+        ((10, 0), (2, 0)),
+        ((0, 30), (0, 3)),
+    ]
+    for pt, mpt in pts:
+        mp = r1.map_pt_in_other_rect(r2, pt)
+        assert mp == mpt
+    mp = r1.map_pt_in_other_rect(r2, (10, 0), clamp_bounds=False)
+    assert mp == (4, 0)
+    mp = r1.map_pt_in_other_rect(r2, (0, 30), clamp_bounds=False)
+    assert mp == (0, 36)
+
+
 # def test_arrange():
 #     r1 = Rect()
 #     r1.set_points((-153.00,28.80), (-69.81,-43.92))

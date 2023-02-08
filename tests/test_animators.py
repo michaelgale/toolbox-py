@@ -422,13 +422,13 @@ def test_link_prev():
 
 def test_link_value_prev():
     a1 = EaseInOutAnimator(0, 0, 30, 5)
-    a2 = LinearAnimator(0, 0, 60, 0, value_from_previous=20)
+    a2 = LinearAnimator(0, 0, 60, 0, previous_to_value=20)
     ag = AnimatorGroup(10, [a1, a2])
     assert len(ag) == 2
     assert ag.start_frame == 10
     assert ag.stop_frame == 100
     assert a2.link_to_previous == True
-    assert a2.value_from_previous == 20
+    assert a2.previous_to_value == 20
     assert ag[10] == 0
     assert ag[40] == 5
     assert ag[70] == 12.5

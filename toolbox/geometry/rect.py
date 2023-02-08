@@ -31,6 +31,7 @@ from numbers import Number
 from functools import reduce
 
 from .point import Point
+from toolbox.datautils import clamp_value
 
 
 class Rect:
@@ -62,10 +63,14 @@ class Rect:
         )
 
     def __repr__(self):
-        return "%s(%r, %r)" % (
+        return "<%s (%.2f,%.2f)-(%.2f,%.2f) w=%.2f h=%.2f>" % (
             self.__class__.__name__,
-            Point(self.left, self.top),
-            Point(self.right, self.bottom),
+            self.left,
+            self.top,
+            self.right,
+            self.bottom,
+            self.width,
+            self.height,
         )
 
     def __eq__(self, other):
@@ -122,6 +127,12 @@ class Rect:
         return self.width, self.height
 
     @property
+    def neg_half(self):
+        xc, yc = self.centre
+        w, h = self.size
+        return -w / 2 + xc, -h / 2 + yc
+
+    @property
     def centre(self):
         return self.get_centre()
 
@@ -169,6 +180,19 @@ class Rect:
         else:
             self.top = y + self.height / 2
             self.bottom = y - self.height / 2
+
+    def move_by(self, pt, py=None):
+        """Translate rect by an offset."""
+        if isinstance(pt, Point):
+            (x, y) = pt.as_tuple()
+        elif isinstance(pt, tuple):
+            x, y = pt[0], pt[1]
+        else:
+            x, y = pt, py
+        self.left += x
+        self.right += x
+        self.top += y
+        self.bottom += y
 
     @property
     def top_left(self):
@@ -280,7 +304,7 @@ class Rect:
         """Makes a bounding rect from the extents of a list of points
         or a list of rects"""
         if len(pts) == 0:
-            return None
+            return self
         bx = []
         by = []
         for pt in pts:
@@ -514,15 +538,100 @@ class Rect:
         r.set_points(p1, p2)
         return r
 
+    def quadrants(self):
+        """Returns a dictionary with Rect objects representing each quadrant."""
+        return Rect.quadrants_from_size(
+            self.size, offset=self.neg_half, bottom_up=self.bottom_up
+        )
+
+    def regions(self):
+        """Returns a dictionary with Rect objects representing each of 3x3 cardinal regions."""
+        return Rect.regions_from_size(
+            self.size, offset=self.neg_half, bottom_up=self.bottom_up
+        )
+
+    def map_pt_in_other_rect(self, other, pt, clamp_bounds=True):
+        """Maps a point from our rect into another corresponding rect. """
+        x, y = self._xy_from_pt(pt)
+        if clamp_bounds:
+            x = clamp_value(x, self.left, self.right)
+            y = clamp_value(y, self.bottom, self.top, auto_limit=True)
+        xr = (x - self.left) / self.width
+        if self.bottom_up:
+            yr = (y - self.top) / self.height
+        else:
+            yr = (y - self.bottom) / self.height
+        xo = other.left + xr * other.width
+        if other.bottom_up:
+            yo = (1.0 - yr) * other.height
+            yo += other.top
+        else:
+            yo = yr * other.height
+            yo += other.bottom
+        return xo, yo
+
     @staticmethod
-    def bounding_rect_from_rects(rects):
+    def bounding_rect_from_rects(rects, bottom_up=False):
         r = Rect()
+        r.bottom_up = bottom_up
         return r.bounding_rect(rects)
 
     @staticmethod
-    def rect_from_points(top_left, bottom_right):
+    def rect_from_points(top_left, bottom_right, bottom_up=False):
         r = Rect()
+        r.bottom_up = bottom_up
         return r.bounding_rect([top_left, bottom_right])
+
+    @staticmethod
+    def _pts_to_rects(pts, offset=None, bottom_up=False):
+        rd = {}
+        for region, pt in pts:
+            r = Rect()
+            r.set_points(*pt)
+            if offset is not None:
+                r.move_by(offset)
+            r.bottom_up = bottom_up
+            r.set_points(r.top_left, r.bottom_right)
+            rd[region] = r
+        return rd
+
+    def _flip_y(pts, h):
+        fpts = []
+        for r, ((x0, y0), (x1, y1)) in pts:
+            fpts.append((r, ((x0, h - y0), (x1, h - y1))))
+        return fpts
+
+    @staticmethod
+    def regions_from_size(size, offset=None, bottom_up=False):
+        w, h = size[0], size[1]
+        pts = [
+            ("top_left", ((0, 0), (w / 3, h / 3))),
+            ("top_right", ((2 * w / 3, 0), (w, h / 3))),
+            ("bottom_left", ((0, 2 * h / 3), (w / 3, h))),
+            ("bottom_right", ((2 * w / 3, 2 * h / 3), (w, h))),
+            ("centre_left", ((0, h / 3), (w / 3, 2 * h / 3))),
+            ("centre_right", ((2 * w / 3, h / 3), (w, 2 * h / 3))),
+            ("top_centre", ((w / 3, 0), (2 * w / 3, h / 3))),
+            ("bottom_centre", ((w / 3, 2 * h / 3), (2 * w / 3, h))),
+            ("centre_centre", ((w / 3, h / 3), (2 * w / 3, 2 * h / 3))),
+        ]
+        if not bottom_up:
+            pts = Rect._flip_y(pts, h)
+        return Rect._pts_to_rects(pts, offset=offset, bottom_up=bottom_up)
+
+    @staticmethod
+    def quadrants_from_size(size, offset=None, bottom_up=False):
+        w, h = size[0], size[1]
+        ht = 0 if bottom_up else h
+        pts = [
+            ("top_left", ((0, 0), (w / 2, h / 2))),
+            ("top_right", ((w / 2, 0), (w, h / 2))),
+            ("bottom_left", ((0, h / 2), (w / 2, h))),
+            ("bottom_right", ((w / 2, h / 2), (w, h))),
+        ]
+        if not bottom_up:
+            pts = Rect._flip_y(pts, h)
+        return Rect._pts_to_rects(pts, offset=offset, bottom_up=bottom_up)
 
     @staticmethod
     def layout_rects(
