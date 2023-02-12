@@ -20,10 +20,7 @@ def almost_same(x, y):
 
 
 def test_image_init():
-    img1 = ImageMixin.open_image(IMAGE1)
-    assert img1.size == 269280
-    assert img1.shape == (220, 306, 4)
-    hsv1 = ImageMixin.hsv_image(img1)
+    hsv1 = ImageMixin.hsv_image(IMAGE1)
     assert hsv1.size == 201960
     assert hsv1.shape == (220, 306, 3)
     hr = ImageMixin.hue_range(hsv1)
@@ -39,6 +36,41 @@ def test_image_pad():
     img2 = ImageMixin.pad_image(img1, 10)
     assert img1.shape == (220, 306, 4)
     assert img2.shape == (240, 326, 4)
+
+    img3 = ImageMixin.pad_image(IMAGE1, 10)
+    assert img3.shape == (240, 326, 4)
+
+
+def test_image_crop():
+    img1 = ImageMixin.open_image(IMAGE1)
+    img2 = ImageMixin.crop_image(img1, (10, 10), (100, 100))
+    assert img1.shape == (220, 306, 4)
+    assert img2.shape == (90, 90, 4)
+    ImageMixin.save_image("./testfiles/crop.png", img2)
+
+    img2 = ImageMixin.crop_image(img1, (-20, -20), (400, 100))
+    assert img1.shape == (220, 306, 4)
+    assert img2.shape == (120, 420, 4)
+    assert ImageMixin.image_size(img2) == (420, 120)
+    ImageMixin.save_image("./testfiles/crop2.png", img2)
+
+
+def test_image_crop_fit():
+    img1 = ImageMixin.open_image(IMAGE1)
+    img2 = ImageMixin.crop_image(img1, (10, 10), (150, 150))
+    assert img1.shape == (220, 306, 4)
+    assert img2.shape == (140, 140, 4)
+    img3 = ImageMixin.crop_to_fit_other(img1, img2)
+    assert img3.shape == (140, 140, 4)
+    ImageMixin.save_image("./testfiles/cropfit1.png", img3)
+
+    img1 = ImageMixin.open_image(IMAGE1)
+    img2 = ImageMixin.crop_image(img1, (10, 10), (100, 100))
+    assert img1.shape == (220, 306, 4)
+    assert img2.shape == (90, 90, 4)
+    img4 = ImageMixin.crop_to_fit_other(img2, img1)
+    assert img4.shape == (220, 306, 4)
+    ImageMixin.save_image("./testfiles/cropfit2.png", img4)
 
 
 def test_image_thr():
@@ -61,9 +93,16 @@ def test_image_thr():
     assert g1[0]["area"] == 1292.5
     assert almost_same(g1[0]["perimeter"], 170.267)
 
-    c1 = ImageMixin.get_centroids(m1)
+    c1 = ImageMixin.centroids_from_moments(m1)
     assert len(c1) == 1
     assert c1[0] == (226, 75)
+
+    assert img1.shape == (220, 306, 4)
+    c2 = ImageMixin.get_centroids_of_hue(
+        img1, 0, hue_window=20, area_thr=100, dim_thr=20
+    )
+    assert len(c2) == 1
+    assert c2[0] == (226, 75)
 
 
 def ch_range(img):
@@ -133,3 +172,20 @@ def test_normhue():
     assert almost_same(d21, 2.411)
     assert almost_same(d31, 0.105)
     assert almost_same(d41, 0.029)
+
+
+def test_count_trans():
+    img1 = ImageMixin.open_image(IMAGE1)
+    img2 = ImageMixin.crop_image(img1, (5, 5), (310, 230))
+    ImageMixin.save_image("./testfiles/count.png", img2)
+    counts = ImageMixin.count_transparent_pixels(img2)
+    assert counts["top_left"] == 55
+    assert counts["top_right"] == 679
+    assert counts["bottom_left"] == 1639
+    assert counts["bottom_right"] == 2244
+    assert counts["total"] == 4617
+    assert counts["min"] == "top_left"
+    assert counts["max"] == "bottom_right"
+
+    c2 = ImageMixin.count_transparent_pixels("./testfiles/count.png")
+    assert counts == c2

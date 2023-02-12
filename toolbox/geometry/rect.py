@@ -25,10 +25,6 @@
 #
 
 import copy
-import math
-from math import sin, cos, radians, sqrt, atan, degrees, atan2, hypot
-from numbers import Number
-from functools import reduce
 
 from .point import Point
 from toolbox.datautils import clamp_value
@@ -551,7 +547,7 @@ class Rect:
         )
 
     def map_pt_in_other_rect(self, other, pt, clamp_bounds=True):
-        """Maps a point from our rect into another corresponding rect. """
+        """Maps a point from our rect into another corresponding rect."""
         x, y = self._xy_from_pt(pt)
         if clamp_bounds:
             x = clamp_value(x, self.left, self.right)
