@@ -23,12 +23,17 @@
 #
 # Misc data manipulation and validation functions
 #
+
+import datetime
+import dateparser
 import math
 import numpy as np
 import cv2
 import re
 import string
 import pycountry
+import itertools
+import nltk
 
 from toolbox.constants import *
 
@@ -310,11 +315,240 @@ def get_numbers(text):
     return s
 
 
-def strip_punc(text):
+def has_numbers(word):
+    """Returns true if numbers are in word"""
+    for c in word:
+        if c in list("0123456789-"):
+            return True
+    return False
+
+
+def strip_punc(text, filter_chars=None, from_right=False, from_left=False):
     """Strips any common punctuation characters from text"""
-    for c in ", . ; : - _ / ? ! @ & % ( ) [ ] { }".split():
-        text = text.replace(c, "")
+    if filter_chars is None:
+        filter_chars = ", . ; : - _ / ? ! @ & % ( ) [ ] { }"
+    if from_right:
+        for c in filter_chars.split():
+            text = text.rstrip(c)
+    if from_left:
+        for c in filter_chars.split():
+            text = text.lstrip(c)
+    if not from_right and not from_left:
+        for c in filter_chars.split():
+            text = text.replace(c, "")
     return text
+
+
+def cleanup_date(date, use_space=False):
+    """Cleanup string in preparation for processing as a date."""
+    clean_chars = "( ) ° . , = + * $ @"
+    cd = date
+    for c in clean_chars.split():
+        if use_space:
+            cd = cd.replace(c, " ")
+        else:
+            cd = cd.replace(c, "")
+    # clean up possible spelling errors
+    spelling_pairs = ["vay may", "fab feb", "dac dec", "var mar", "way may"]
+    cd = cd.lower()
+    for e in spelling_pairs:
+        es = e.split()
+        cd = cd.replace(es[0], es[1])
+    return cd.rstrip()
+
+
+def pick_best_ymd(date):
+    """Choose the best date candidate from a triple numerical representation of
+    date in either YMD, MDY, or DMY."""
+    ymd_date = dateparser.parse(
+        date,
+        languages=["en"],
+        settings={
+            "STRICT_PARSING": True,
+            "DATE_ORDER": "YMD",
+        },
+    )
+    mdy_date = dateparser.parse(
+        date,
+        languages=["en"],
+        settings={
+            "STRICT_PARSING": True,
+            "DATE_ORDER": "MDY",
+        },
+    )
+    dmy_date = dateparser.parse(
+        date,
+        languages=["en"],
+        settings={
+            "STRICT_PARSING": True,
+            "DATE_ORDER": "DMY",
+        },
+    )
+    # ensure 4 digit year formats are preferred over 2 digit years
+    if "-" in date:
+        ds = date.split("-")
+    elif "/" in date:
+        ds = date.split("/")
+    else:
+        ds = None
+    if ds is not None:
+        ls = "".join([str(len(x)) for x in ds])
+        if ls == "422":
+            return ymd_date
+        elif ls == "224":
+            return mdy_date
+
+    today = datetime.datetime.today()
+    if all([d is not None for d in [ymd_date, mdy_date, dmy_date]]):
+        dates = [
+            (abs(today - ymd_date), ymd_date),
+            (abs(today - mdy_date), mdy_date),
+            (abs(today - dmy_date), dmy_date),
+        ]
+        dates = sorted(dates, key=lambda x: x[0])
+        if len(dates) > 0:
+            return dates[0][1]
+    return None
+
+
+def get_dates_from_text(phrases, preferred_format=None, debug=False):
+    """Finds candidate dates from provided text."""
+
+    def _valid_date(d):
+        if d.year < 1995 or d.year > 2040:
+            return None
+        return datetime.datetime(d.year, d.month, d.day)
+
+    dates = []
+    date_formats = preferred_format
+    if preferred_format is not None:
+        if isinstance(preferred_format, list):
+            date_formats = []
+            for pf in preferred_format:
+                date_formats.append(cleanup_date(pf))
+        else:
+            date_formats = [cleanup_date(preferred_format)]
+    for phrase in phrases:
+        phrase = cleanup_date(phrase, use_space=True)
+        if len(phrase) < 8:
+            continue
+        new_date = None
+
+        if date_formats is None:
+            ymd = re.search("^\d{2,4}[\/-]\d{1,2}[\/-]\d{1,2}$", phrase)
+            mdy = re.search("^\d{1,2}[\/-]\d{1,2}[\/-]\d{4}$", phrase)
+            if ymd is not None:
+                new_date = pick_best_ymd(ymd.group(0))
+            elif mdy is not None:
+                new_date = pick_best_ymd(mdy.group(0))
+            else:
+                ps = phrase.split()
+                if len(ps) > 1:
+                    for p in ps:
+                        ymd = re.search("^\d{2,4}[\/-]\d{1,2}[\/-]\d{1,2}$", p)
+                        mdy = re.search("^\d{1,2}[\/-]\d{1,2}[\/-]\d{4}$", p)
+                        if ymd is not None:
+                            new_date = pick_best_ymd(ymd.group(0))
+                        elif mdy is not None:
+                            new_date = pick_best_ymd(mdy.group(0))
+                        if new_date is not None:
+                            break
+
+        split_phrase = phrase.split()
+        if new_date is None:
+            numbers = get_numbers(split_phrase)
+            # avoid processing two number pairs or ambiguous number pairs
+            # such as 19 Sep 17
+            skip = False
+            if len(numbers) == 2 and "-" in phrase:
+                skip = True
+            if len(numbers) >= 2 and len(split_phrase) == 3:
+                # reject improper form 2022 04 march
+                if len(numbers) == 2 and not has_numbers(split_phrase[2]):
+                    skip = True
+                if len(numbers[0]) == 2 and len(numbers[1]) == 2:
+                    if numbers[0] == split_phrase[0] and numbers[1] == split_phrase[2]:
+                        skip = True
+                    elif (
+                        numbers[0] == split_phrase[2] and numbers[1] == split_phrase[0]
+                    ):
+                        skip = True
+                    elif len(numbers) == 3:
+                        skip = True
+            # guard against too many elements with only single characters
+            if sum([len(e) == 1 for e in split_phrase]) >= 2:
+                skip = True
+            if date_formats is not None:
+                d = dateparser.date.parse_with_formats(
+                    phrase, date_formats=date_formats, settings=None
+                )
+                if isinstance(d, dateparser.date.DateData):
+                    if d.date_obj is not None:
+                        new_date = d.date_obj
+            elif not skip:
+                # guard against a long number string being confused as a timestamp
+                if len(split_phrase) == 1 and not any(
+                    [c in phrase for c in ["/", "-"]]
+                ):
+                    new_date = None
+                else:
+                    new_date = dateparser.parse(
+                        phrase,
+                        languages=["en"],
+                        settings={"STRICT_PARSING": True},
+                    )
+
+        if new_date is not None:
+            # guard against a long number string being confused as a timestamp
+            if len(split_phrase) == 1 and not any([c in phrase for c in ["/", "-"]]):
+                new_date = None
+            # guard against time duration phrases
+            if any(
+                [
+                    e in phrase.lower()
+                    for e in ["month", "year", "day", "week", "hour", "min", "h"]
+                ]
+            ):
+                new_date = None
+        if new_date is not None:
+            cdate = _valid_date(new_date)
+            if cdate is not None:
+                dates.append(cdate)
+                if debug:
+                    print(
+                        "Candidate text: %-24s Format rules: %-16s Parsed date: %s"
+                        % (phrase, date_formats, cdate)
+                    )
+    return dates
+
+
+def most_popular(words, ignore_outliers=True, ignore_no_winner=True):
+    """Computes the most popular word from a group of words."""
+    count = len(words)
+    if ignore_outliers and count > 10:
+        new_words = sorted(words)
+        min_idx = round(count * 0.1)
+        max_idx = round(count * 0.9)
+        words = new_words[min_idx:max_idx]
+    word_dist = word_freq(words)
+    if word_dist is not None:
+        if len(word_dist) > 0:
+            best_val = word_dist[0][1]
+            not_unique = 0
+            # if there is no clear winner then return either the
+            # median value of the best values
+            for i in list(range(1, len(word_dist))):
+                if best_val == word_dist[i][1]:
+                    not_unique = i
+                    break
+            if not_unique:
+                if ignore_no_winner:
+                    med = round(i / 2)
+                    return word_dist[med][0]
+                else:
+                    return None
+            return word_dist[0][0]
+    return None
 
 
 def replace_case_insensitive(text, word, new_word):
@@ -390,6 +624,36 @@ def replace_country_codes(text):
         if country_code is not None:
             rs = rs.replace(t, country_code.name)
     return rs
+
+
+def word_freq(words, only_words=False):
+    """Computes the frequency distributions of a provided word list.
+    Returns a list of word/freq pairs.  Returns just the sorted
+    word list if only_words is True."""
+    dist = nltk.FreqDist(words)
+    common = dist.most_common()
+    word_dist = list(
+        itertools.chain(
+            *(sorted(ys) for _, ys in itertools.groupby(common, key=lambda t: t[1]))
+        )
+    )
+    if only_words:
+        return [w[0] for w in word_dist]
+    return word_dist
+
+
+def word_freq_str(words, min_count=0, up_to=0, style="flat"):
+    """Returns a string showing word frequency in descending order."""
+    s = []
+    word_dist = word_freq(words)
+    limit = up_to if up_to > 0 else len(words)
+    for word in word_dist[:limit]:
+        if word[1] >= min_count:
+            if style == "flat":
+                s.append("%dx: %s " % (word[1], word[0]))
+            else:
+                s.append("%3dx : %s\n" % (word[1], word[0]))
+    return "".join(s)
 
 
 def rgb_from_hex(hexcode, as_uint8=False):

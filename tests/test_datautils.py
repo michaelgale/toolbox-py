@@ -123,6 +123,15 @@ def test_words_and_phrases():
     assert "blue boat" in phrases
 
 
+def test_has_numbers():
+    assert has_numbers("$53.09")
+    assert has_numbers("K7L4G8")
+    assert not has_numbers("DR.WHITE")
+    assert has_numbers("DR.WHITE73")
+    assert not has_numbers("Alice")
+    assert not has_numbers("cat")
+
+
 value_text = """
 this is placeholder text that could contain embedded values
 Sub totalled: 34.52

@@ -137,6 +137,7 @@ class ImageMixin:
     def crop_to_fit_other(img, other):
         """Crops img to fit the dimensions of other"""
         img = ImageMixin.auto_open(img)
+        other = ImageMixin.auto_open(other)
         img_width, img_height = img.shape[1], img.shape[0]
         other_width, other_height = other.shape[1], other.shape[0]
         width_diff = other_width - img_width

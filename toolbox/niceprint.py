@@ -197,6 +197,19 @@ def toolboxprint(
     next_is_currency = False
     replace_dollars = False
     for i, t in enumerate(words):
+        if t in gw:
+            ts = ts.replace(t, str(crayons.green(str(t), bold=False)))
+        elif t in yw:
+            ts = ts.replace(t, str(crayons.yellow(str(t), bold=False)))
+        elif t in rw:
+            ts = ts.replace(t, str(crayons.red(str(t), bold=False)))
+        elif t in cw:
+            ts = ts.replace(t, str(crayons.cyan(str(t), bold=False)))
+        elif t in mw:
+            ts = ts.replace(t, str(crayons.magenta(str(t), bold=False)))
+        elif t in bw:
+            ts = ts.replace(t, str(crayons.white(str(t), bold=True)))
+    for i, t in enumerate(words):
         if t[0] == "$" and len(t) > 1:
             ts = ts.replace(t, str(crayons.green(str(t), bold=True)))
         elif (i + 1) < n and t == "$":
@@ -228,18 +241,6 @@ def toolboxprint(
             ts = ts.replace(t, str(crayons.cyan(str(t), bold=True)))
         elif t in emails:
             ts = ts.replace(t, str(crayons.blue(str(t), bold=True)))
-        elif t in gw:
-            ts = ts.replace(t, str(crayons.green(str(t), bold=False)))
-        elif t in yw:
-            ts = ts.replace(t, str(crayons.yellow(str(t), bold=False)))
-        elif t in rw:
-            ts = ts.replace(t, str(crayons.red(str(t), bold=False)))
-        elif t in cw:
-            ts = ts.replace(t, str(crayons.cyan(str(t), bold=False)))
-        elif t in mw:
-            ts = ts.replace(t, str(crayons.magenta(str(t), bold=False)))
-        elif t in bw:
-            ts = ts.replace(t, str(crayons.white(str(t), bold=True)))
     if replace_dollars:
         ds = str(crayons.green(str("$"), bold=True))
         ts = ts.replace("$ ", ds)
