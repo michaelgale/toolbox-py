@@ -349,3 +349,29 @@ def test_clamp():
     assert x == 5
     x = clamp_value(10, 5, 1)
     assert x == 5
+
+
+def test_eng_units():
+    r = []
+    for x in [800e-9, 1.2e-6, -3, 2.5, 11.239, 150e3, 2.2e6, 80e9]:
+        s = eng_units(x, units="B", unitary=True, sigfigs=4)
+        r.append(s)
+    rs = [
+        "800.0 nB",
+        "1.2 uB",
+        "-3 B",
+        "2.5 B",
+        "11.23 B",
+        "150.0 kB",
+        "2.2 MB",
+        "80.0 GB",
+    ]
+    for v, vr in zip(r, rs):
+        assert v == vr
+    r = []
+    for x in [800e-9, 1.2e-6, -3, 2.5, 11.239, 150e3, 2.2e6, 80e9]:
+        s = eng_units(x, units="s", unitsep=False)
+        r.append(s)
+    rs = ["800.0ns", "1.2us", "-3.0s", "2.5s", "11.239s", "150.0ks", "2.2Ms", "80.0Gs"]
+    for v, vr in zip(r, rs):
+        assert v == vr

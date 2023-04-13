@@ -23,6 +23,7 @@ but could match single line numbers like
 Max Headroom PYTHON Python ALL-CAPS MyCAPS
 """
 
+
 def test_filter():
     t1 = TextProc(text=test_text)
     assert "2022-10-09" == t1.best_date

@@ -245,3 +245,24 @@ def toolboxprint(
         ds = str(crayons.green(str("$"), bold=True))
         ts = ts.replace("$ ", ds)
     print(ts)
+
+
+def strip_rich_str(s):
+    """Converts a string with rich annotations into a plain unformatted string."""
+    ignore = False
+    out = []
+    for c in s:
+        if not ignore and c == "[":
+            ignore = True
+        elif ignore and c == "]":
+            ignore = False
+        elif not ignore:
+            out.append(c)
+    return "".join(s)
+
+
+def rich_colour_str(s, colour=None, bold=False, suffix=""):
+    """Convenience function to produce a rich colour formatted string."""
+    colour = colour if colour is not None else "#A0A0A0"
+    bold = "bold" if bold else ""
+    return "[%s %s]%s[/]%s" % (colour, bold, str(s), suffix)

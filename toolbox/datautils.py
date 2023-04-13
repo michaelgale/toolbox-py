@@ -34,6 +34,7 @@ import string
 import pycountry
 import itertools
 import nltk
+from email.header import decode_header, make_header
 
 from toolbox.constants import *
 
@@ -323,7 +324,9 @@ def has_numbers(word):
     return False
 
 
-def strip_punc(text, filter_chars=None, from_right=False, from_left=False):
+def strip_punc(
+    text, filter_chars=None, from_right=False, from_left=False, replacement=""
+):
     """Strips any common punctuation characters from text"""
     if filter_chars is None:
         filter_chars = ", . ; : - _ / ? ! @ & % ( ) [ ] { }"
@@ -335,8 +338,73 @@ def strip_punc(text, filter_chars=None, from_right=False, from_left=False):
             text = text.lstrip(c)
     if not from_right and not from_left:
         for c in filter_chars.split():
-            text = text.replace(c, "")
+            text = text.replace(c, replacement)
     return text
+
+
+def str_from_mime_words(text):
+    """Returns a string from a possible MIME encoded-words string object."""
+    try:
+        ss = str(make_header(decode_header(text.decode())))
+    except:
+        try:
+            ss = str(make_header(decode_header(text)))
+        except:
+            ss = str(text)
+    return ss.lstrip().rstrip()
+
+
+def clean_filename(text, replacement="_", no_spaces=True):
+    """Returns a safe string object suitable for a filename.
+    Objectionable characters such as path separators / \,
+    punctuation, etc. are removed and substituted with either an
+    underscore or other optionally specified character."""
+    text = str_from_mime_words(text)
+    text = strip_punc(text, filter_chars="/ \\ & , ; : + @ %", replacement=replacement)
+    if no_spaces:
+        # get rid of spurious replacements around - and . (looks better)
+        text = text.replace("  ", replacement).replace(" ", replacement)
+        rep = "%s-%s" % (replacement, replacement)
+        text = text.replace(rep, "-")
+        rep = "%s-" % (replacement)
+        text = text.replace(rep, "-")
+        rep = "-%s" % (replacement)
+        text = text.replace(rep, "-")
+        rep = "%s." % (replacement)
+        text = text.replace(rep, ".")
+        # get rid of consecutive runs of replacement chars
+        for n in [4, 3, 2]:
+            rep = replacement * n
+            text = text.replace(rep, replacement)
+    return text
+
+
+def ymd_from_date_spec(date):
+    """Returns a tuple of datetime.date ranges based on text specification.
+    YYYY returns date(YYYY, 1, 1), date(YYYY, 12, 31)
+    YYYY-MM returns date(YYYY, MM, 1), date(YYYY, MM, 31)
+    YYYY-MM-DD returns date(YYYY, MM, DD), date(YYYY, MM, DD)"""
+    ds = str(date).replace("-", "").replace("/", "")
+    y1 = int(ds[:4])
+    y2 = y1
+    m1, m2 = 1, 12
+    d1, d2 = 1, 31
+    if len(ds) > 4:
+        m1 = int(ds[4:6])
+        m2 = min(m1 + 1, 12)
+        if m1 < 12:
+            d2 = 1
+    if len(ds) > 6:
+        m2 = m1
+        d1 = int(ds[6:8])
+        d2 = d1 + 1
+        if d2 > 31:
+            d2 = 1
+            m2 = m1 + 1
+            if m2 > 12:
+                m2 = 1
+                y2 += 1
+    return datetime.date(y1, m1, d1), datetime.date(y2, m2, d2)
 
 
 def cleanup_date(date, use_space=False):
@@ -780,3 +848,33 @@ def clamp_value(v, min_value, max_value, auto_limit=False):
     cv = min(v, max_v)
     cv = max(cv, min_v)
     return cv
+
+
+def eng_units(val, units="", prefix="", sigfigs=None, unitsep=True, unitary=False):
+    """Represents a numeric value in engineering (3x orders magnitude) intervals
+    with optional units and length constraints."""
+    mags = [18, 15, 12, 9, 6, 3, 0, -3, -6, -9, -12, -15, -18]
+    mods = "E P T G M k _ m u n p f a"
+    sign = ""
+    if val < 0:
+        val = abs(val)
+        sign = "-"
+    sep = " " if unitsep else ""
+    ndig = 6 if sigfigs is None else sigfigs + 1
+    ndig = min(ndig, 7)
+    ndig = max(ndig, 2)
+    s = ""
+    for mag, mod in zip(mags, mods.split()):
+        if val > 10 ** mag:
+            s = "%.3f" % (val / 10 ** mag)
+            s = s[:ndig]
+            s = s.rstrip("0")
+            if s.endswith("."):
+                s = s + "0"
+            if unitary and mod == "_":
+                if s.endswith(".0"):
+                    s = s[:-2]
+            s = "%s%s%s%s%s%s" % (prefix, sign, s, sep, mod, units)
+            break
+        s = s.replace("_", "")
+    return s
