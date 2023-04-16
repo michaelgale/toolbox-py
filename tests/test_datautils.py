@@ -375,3 +375,48 @@ def test_eng_units():
     rs = ["800.0ns", "1.2us", "-3.0s", "2.5s", "11.239s", "150.0ks", "2.2Ms", "80.0Gs"]
     for v, vr in zip(r, rs):
         assert v == vr
+
+
+def test_month_day_num():
+    months = "jan January Mar Ma MAY dec"
+    results = [1, 1, 3, 0, 5, 12]
+    for m, r in zip(months.split(), results):
+        assert month_num(m) == r
+
+    days = "mon sun Fri WED saturday stat"
+    results = [2, 1, 6, 4, 7, 0]
+    for m, r in zip(days.split(), results):
+        assert day_week_num(m) == r
+    results = [1, 7, 5, 3, 6, 0]
+    for m, r in zip(days.split(), results):
+        assert day_week_num(m, sunday_first=False) == r
+
+
+def test_clean_filename():
+    fns = [
+        "a;ks*fjhsl-3.pdf",
+        "File = 3/9;.doc",
+        "-=abs=-93.zip",
+    ]
+    clean = [
+        "a_ks_fjhsl-3.pdf",
+        "File_=_3_9.doc",
+        "-=abs=-93.zip",
+    ]
+    for f, c in zip(fns, clean):
+        fc = clean_filename(f, replacement="_", no_spaces=True)
+        assert fc == c
+
+
+def test_word_split():
+    t1 = "word0asfgja1Word1sdfasdlkas ;fdgj sdf gj;lkdsf2 wordals 2gjWORDksldhf3word 3alskdjfla;sd"
+    s1 = word_split(t1, word_list="word als", case_sensitive=True)
+    assert (
+        s1
+        == "word 0asfgja1Word1sdfasdlkas ;fdgj sdf gj;lkdsf2 word als 2gjWORDksldhf3 word 3 als kdjfla;sd"
+    )
+    s2 = word_split(t1, word_list="word als", case_sensitive=False)
+    assert (
+        s2
+        == "word 0asfgja1 Word 1sdfasdlkas ;fdgj sdf gj;lkdsf2 word als 2gj WORD ksldhf3 word 3 als kdjfla;sd"
+    )

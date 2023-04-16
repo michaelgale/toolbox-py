@@ -342,6 +342,41 @@ def strip_punc(
     return text
 
 
+def word_split(text, word_list, case_sensitive=False):
+    """Adds space between desired words which may or may not be delimited with whitespace.
+    The desired words are specified by word_list and case sensitivity is optional"""
+    if isinstance(word_list, str):
+        word_list = word_list.split()
+    for word in word_list:
+        w = word.lower() if not case_sensitive else word
+        if not case_sensitive:
+            tl = text.lower()
+        else:
+            tl = text
+        ts = tl.split(w)
+        ns = len(ts)
+        if ns > 1:
+            new_text = []
+            idx = 0
+            for i, t in enumerate(ts):
+                end = idx + len(t)
+                if len(t) > 0:
+                    new_text.append(text[idx:end])
+                    if not t[-1] == " ":
+                        new_text.append(" ")
+                idx += len(t)
+                if i < ns - 1:
+                    new_text.append(text[idx : idx + len(word)])
+                    idx += len(word)
+                    if len(ts[i + 1]) > 0:
+                        if not ts[i + 1][0] == " ":
+                            new_text.append(" ")
+            text = "".join(new_text)
+    text = text.lstrip()
+    text = text.rstrip()
+    return text
+
+
 def str_from_mime_words(text):
     """Returns a string from a possible MIME encoded-words string object."""
     try:
@@ -360,7 +395,9 @@ def clean_filename(text, replacement="_", no_spaces=True):
     punctuation, etc. are removed and substituted with either an
     underscore or other optionally specified character."""
     text = str_from_mime_words(text)
-    text = strip_punc(text, filter_chars="/ \\ & , ; : + @ %", replacement=replacement)
+    text = strip_punc(
+        text, filter_chars="/ \\ & , ; : + @ % *", replacement=replacement
+    )
     if no_spaces:
         # get rid of spurious replacements around - and . (looks better)
         text = text.replace("  ", replacement).replace(" ", replacement)
@@ -379,11 +416,38 @@ def clean_filename(text, replacement="_", no_spaces=True):
     return text
 
 
+MONTHS_LIST = "jan feb mar apr may jun jul aug sep oct nov dec"
+
+
+def month_num(month):
+    """Converts any representation of a month to a corresponding integer.
+    Jan = 1, Feb = 2, etc."""
+    for i, m in enumerate(MONTHS_LIST.split()):
+        if month.lower()[:3] == m:
+            return i + 1
+    return 0
+
+
+WEEKDAY_LIST = "sun mon tue wed thu fri sat"
+
+
+def day_week_num(day, sunday_first=True):
+    """Converts any representation of a weekday to a corresponding integer.
+    Sun = 1, Mon = 2, etc. if sunday_first, else Mon = 1, etc."""
+    for i, m in enumerate(WEEKDAY_LIST.split()):
+        if day.lower()[:3] == m:
+            if sunday_first:
+                return i + 1
+            else:
+                return i if i > 0 else 7
+    return 0
+
+
 def ymd_from_date_spec(date):
     """Returns a tuple of datetime.date ranges based on text specification.
-    YYYY returns date(YYYY, 1, 1), date(YYYY, 12, 31)
-    YYYY-MM returns date(YYYY, MM, 1), date(YYYY, MM, 31)
-    YYYY-MM-DD returns date(YYYY, MM, DD), date(YYYY, MM, DD)"""
+    YYYY returns date(YYYY, 1, 1), date(YYYY, 2, 1)
+    YYYY-MM returns date(YYYY, MM, 1), date(YYYY, MM+1, 1)
+    YYYY-MM-DD returns date(YYYY, MM, DD), date(YYYY, MM, DD+1)"""
     ds = str(date).replace("-", "").replace("/", "")
     y1 = int(ds[:4])
     y2 = y1
@@ -876,5 +940,5 @@ def eng_units(val, units="", prefix="", sigfigs=None, unitsep=True, unitary=Fals
                     s = s[:-2]
             s = "%s%s%s%s%s%s" % (prefix, sign, s, sep, mod, units)
             break
-        s = s.replace("_", "")
+    s = s.replace("_", "")
     return s
