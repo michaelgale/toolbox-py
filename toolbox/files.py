@@ -32,7 +32,7 @@ import crayons
 from .niceprint import colour_path_str, file_size_str
 
 # File type groups
-image_files = [
+image_files = (
     "jpg",
     "jpeg",
     "png",
@@ -57,8 +57,8 @@ image_files = [
     "nef",
     "heic",
     "exr",
-]
-archive_files = [
+)
+archive_files = (
     "dmg",
     "zip",
     "gz",
@@ -87,8 +87,8 @@ archive_files = [
     "pkl",
     "whl",
     "wheel",
-]
-media_files = [
+)
+media_files = (
     "mov",
     "mp4",
     "avi",
@@ -104,8 +104,8 @@ media_files = [
     "mpeg",
     "asf",
     "3gp",
-]
-audio_files = [
+)
+audio_files = (
     "wav",
     "mp3",
     "m4c",
@@ -120,8 +120,8 @@ audio_files = [
     "aac",
     "au",
     "m4p",
-]
-vector_files = [
+)
+vector_files = (
     "svg",
     "ai",
     "wmf",
@@ -132,8 +132,8 @@ vector_files = [
     "vsd",
     "amf",
     "gstencil",
-]
-cad_files = [
+)
+cad_files = (
     "dwg",
     "dxf",
     "step",
@@ -153,8 +153,8 @@ cad_files = [
     "lbr",
     "FCStd",
     "brd",
-]
-doc_files = [
+)
+doc_files = (
     "doc",
     "xls",
     "xlsx",
@@ -173,8 +173,8 @@ doc_files = [
     "tex",
     "rst",
     "rtf",
-]
-src_files = [
+)
+src_files = (
     "c",
     "cpp",
     "h",
@@ -210,8 +210,8 @@ src_files = [
     "lproj",
     "sln",
     "tcl",
-]
-web_files = [
+)
+web_files = (
     "html",
     "htm",
     "php",
@@ -222,8 +222,8 @@ web_files = [
     "rw6",
     "rw7",
     "webarchive",
-]
-obj_files = [
+)
+obj_files = (
     "o",
     "a",
     "lib",
@@ -243,12 +243,12 @@ obj_files = [
     "sdk",
     "swiftmodule",
     "pch",
-]
-lego_files = ["ldr", "lxf", "mpd", "dat", "ldd", "ldraw", "bbm", "pub"]
-cfg_files = ["cfg", "ini", "plist", "rc", "config", "xcconfig", "yml", "json", "conf"]
-font_files = ["ttf", "otf", "woff", "eot", "pfb", "afm", "woff2"]
-app_files = ["app", "exe", "bundle"]
-data_files = [
+)
+lego_files = ("ldr", "lxf", "mpd", "dat", "ldd", "ldraw", "bbm", "pub")
+cfg_files = ("cfg", "ini", "plist", "rc", "config", "xcconfig", "yml", "json", "conf")
+font_files = ("ttf", "otf", "woff", "eot", "pfb", "afm", "woff2")
+app_files = ("app", "exe", "bundle")
+data_files = (
     "csv",
     "sqlite",
     "sqlite3",
@@ -259,7 +259,7 @@ data_files = [
     "data",
     "dtbase2",
     "dtmeta",
-]
+)
 
 file_groups = {
     "Images": image_files,

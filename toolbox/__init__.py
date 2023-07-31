@@ -4,7 +4,7 @@ import os
 
 # fmt: off
 __project__ = 'toolbox'
-__version__ = '0.7.2'
+__version__ = '0.7.4'
 # fmt: on
 
 VERSION = __project__ + "-" + __version__
@@ -27,6 +27,7 @@ from .niceprint import (
     toolboxprint,
     rich_colour_str,
     strip_rich_str,
+    emoji_code_from_country,
 )
 
 from .geometry.vector import *

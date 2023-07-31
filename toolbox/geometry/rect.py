@@ -194,12 +194,20 @@ class Rect:
     def top_left(self):
         return self.get_top_left()
 
+    @top_left.setter
+    def top_left(self, pt):
+        self.move_top_left_to(pt)
+
     def get_top_left(self):
         return (self.left, self.top)
 
     @property
     def bottom_left(self):
         return self.get_bottom_left()
+
+    @bottom_left.setter
+    def bottom_left(self, pt):
+        self.move_bottom_left_to(pt)
 
     def get_bottom_left(self):
         return (self.left, self.bottom)
@@ -592,15 +600,12 @@ class Rect:
         return rd
 
     def _flip_y(pts, h):
-        fpts = []
-        for r, ((x0, y0), (x1, y1)) in pts:
-            fpts.append((r, ((x0, h - y0), (x1, h - y1))))
-        return fpts
+        return [(r, ((x0, h - y0), (x1, h - y1))) for r, ((x0, y0), (x1, y1)) in pts]
 
     @staticmethod
     def regions_from_size(size, offset=None, bottom_up=False):
         w, h = size[0], size[1]
-        pts = [
+        pts = (
             ("top_left", ((0, 0), (w / 3, h / 3))),
             ("top_right", ((2 * w / 3, 0), (w, h / 3))),
             ("bottom_left", ((0, 2 * h / 3), (w / 3, h))),
@@ -610,7 +615,7 @@ class Rect:
             ("top_centre", ((w / 3, 0), (2 * w / 3, h / 3))),
             ("bottom_centre", ((w / 3, 2 * h / 3), (2 * w / 3, h))),
             ("centre_centre", ((w / 3, h / 3), (2 * w / 3, 2 * h / 3))),
-        ]
+        )
         if not bottom_up:
             pts = Rect._flip_y(pts, h)
         return Rect._pts_to_rects(pts, offset=offset, bottom_up=bottom_up)
@@ -618,13 +623,13 @@ class Rect:
     @staticmethod
     def quadrants_from_size(size, offset=None, bottom_up=False):
         w, h = size[0], size[1]
-        ht = 0 if bottom_up else h
-        pts = [
+        # ht = 0 if bottom_up else h
+        pts = (
             ("top_left", ((0, 0), (w / 2, h / 2))),
             ("top_right", ((w / 2, 0), (w, h / 2))),
             ("bottom_left", ((0, h / 2), (w / 2, h))),
             ("bottom_right", ((w / 2, h / 2), (w, h))),
-        ]
+        )
         if not bottom_up:
             pts = Rect._flip_y(pts, h)
         return Rect._pts_to_rects(pts, offset=offset, bottom_up=bottom_up)
@@ -857,3 +862,70 @@ class RectCell(Rect):
                     gr.move_top_left_to((bounds.left, min_bottom))
                     gutters.append(gr)
         return gutters
+
+
+class RectMixin:
+    """A class which adds some Rect semantics to another class."""
+
+    @property
+    def bottom_left(self):
+        return self.rect.get_bottom_left()
+
+    @bottom_left.setter
+    def bottom_left(self, pos):
+        if not isinstance(pos, Point):
+            self.rect.move_bottom_left_to(Point(*pos))
+        else:
+            self.rect.move_bottom_left_to(pos)
+
+    @property
+    def top_left(self):
+        return self.rect.get_top_left()
+
+    @top_left.setter
+    def top_left(self, pos):
+        if not isinstance(pos, Point):
+            self.rect.move_top_left_to(Point(*pos))
+        else:
+            self.rect.move_top_left_to(pos)
+
+    @property
+    def bottom_right(self):
+        return self.rect.get_bottom_right()
+
+    @bottom_right.setter
+    def bottom_right(self, pos):
+        if not isinstance(pos, Point):
+            self.rect.move_bottom_right_to(Point(*pos))
+        else:
+            self.rect.move_bottom_right_to(pos)
+
+    @property
+    def top_right(self):
+        return self.rect.get_top_right()
+
+    @top_right.setter
+    def top_right(self, pos):
+        if not isinstance(pos, Point):
+            self.rect.move_top_right_to(Point(*pos))
+        else:
+            self.rect.move_top_right_to(pos)
+
+    @property
+    def size(self):
+        return self.rect.get_size()
+
+    @size.setter
+    def size(self, new_size):
+        self.rect.set_size(*new_size)
+
+    @property
+    def centre(self):
+        return self.rect.centre
+
+    @centre.setter
+    def centre(self, pos):
+        if not isinstance(pos, Point):
+            self.rect.move_to(Point(*pos))
+        else:
+            self.rect.move_to(pos)

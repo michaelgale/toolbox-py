@@ -29,11 +29,11 @@ import dateparser
 import math
 import numpy as np
 import cv2
-import re
 import string
 import pycountry
 import itertools
 import nltk
+from re import search, match
 from email.header import decode_header, make_header
 
 from toolbox.constants import *
@@ -131,10 +131,7 @@ def n_grams(text, n, as_list=True):
         n_grams = [w[i : i + n] for i in range(len(w) - n + 1)]
         if as_list:
             return n_grams
-        joined = []
-        for n_gram in n_grams:
-            joined.append(" ".join(n_gram))
-        return joined
+        return [" ".join(n_gram) for n_gram in n_grams]
     return w
 
 
@@ -227,7 +224,7 @@ def get_email_addresses(text):
     text = str(text)
     for t in text.split():
         if len(t) > 1:
-            address = re.search(
+            address = search(
                 "^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$", t
             )
             if address is not None:
@@ -248,7 +245,7 @@ def get_telephone_numbers(text):
     if len(pairs) > 0:
         for pair in pairs:
             pair = pair.replace(":", " ")
-            telno = re.search("\(?[\d]{3}\)?[\s-]?[\d]{3}[\s-]?[\d]{4}$", pair)
+            telno = search("\(?[\d]{3}\)?[\s-]?[\d]{3}[\s-]?[\d]{4}$", pair)
             if telno is not None:
                 s.append(telno.group(0))
     # then look for completely contained telephone numbers which have not
@@ -256,9 +253,9 @@ def get_telephone_numbers(text):
     for t in all_words.split():
         if len(t) > 1:
             word = t.replace(":", " ")
-            telno1 = re.match("^\d{1}[-]\d{3}[-]\d{3}[-]\d{4}$", word)
-            telno2 = re.match("^\(?[\d]{3}\)?[\s-]?[\d]{3}[\s-]?[\d]{4}$", word)
-            telno3 = re.match("^\d{3}[-]\d{4}$", word)
+            telno1 = match("^\d{1}[-]\d{3}[-]\d{3}[-]\d{4}$", word)
+            telno2 = match("^\(?[\d]{3}\)?[\s-]?[\d]{3}[\s-]?[\d]{4}$", word)
+            telno3 = match("^\d{3}[-]\d{4}$", word)
             if telno1 is not None or telno2 is not None or telno3 is not None:
                 if word not in s:
                     is_already_in_s = False
@@ -303,10 +300,11 @@ def get_numbers(text):
     if isinstance(text, list):
         text = " ".join(text)
     text = str(text)
+    nums = tuple("0123456789.-")
     for t in text.split():
         ok = True
         for c in t:
-            if c not in list("0123456789.-"):
+            if c not in nums:
                 ok = False
                 break
         if ok:
@@ -318,8 +316,9 @@ def get_numbers(text):
 
 def has_numbers(word):
     """Returns true if numbers are in word"""
+    nums = tuple("0123456789-")
     for c in word:
-        if c in list("0123456789-"):
+        if c in nums:
             return True
     return False
 
@@ -416,25 +415,21 @@ def clean_filename(text, replacement="_", no_spaces=True):
     return text
 
 
-MONTHS_LIST = "jan feb mar apr may jun jul aug sep oct nov dec"
-
-
 def month_num(month):
     """Converts any representation of a month to a corresponding integer.
     Jan = 1, Feb = 2, etc."""
-    for i, m in enumerate(MONTHS_LIST.split()):
+    MONTHS_LIST = "jan feb mar apr may jun jul aug sep oct nov dec".split()
+    for i, m in enumerate(MONTHS_LIST):
         if month.lower()[:3] == m:
             return i + 1
     return 0
 
 
-WEEKDAY_LIST = "sun mon tue wed thu fri sat"
-
-
 def day_week_num(day, sunday_first=True):
     """Converts any representation of a weekday to a corresponding integer.
     Sun = 1, Mon = 2, etc. if sunday_first, else Mon = 1, etc."""
-    for i, m in enumerate(WEEKDAY_LIST.split()):
+    WEEKDAY_LIST = "sun mon tue wed thu fri sat".split()
+    for i, m in enumerate(WEEKDAY_LIST):
         if day.lower()[:3] == m:
             if sunday_first:
                 return i + 1
@@ -481,7 +476,7 @@ def cleanup_date(date, use_space=False):
         else:
             cd = cd.replace(c, "")
     # clean up possible spelling errors
-    spelling_pairs = ["vay may", "fab feb", "dac dec", "var mar", "way may"]
+    spelling_pairs = ("vay may", "fab feb", "dac dec", "var mar", "way may")
     cd = cd.lower()
     for e in spelling_pairs:
         es = e.split()
@@ -555,9 +550,7 @@ def get_dates_from_text(phrases, preferred_format=None, debug=False):
     date_formats = preferred_format
     if preferred_format is not None:
         if isinstance(preferred_format, list):
-            date_formats = []
-            for pf in preferred_format:
-                date_formats.append(cleanup_date(pf))
+            date_formats = [cleanup_date(pf) for pf in preferred_format]
         else:
             date_formats = [cleanup_date(preferred_format)]
     for phrase in phrases:
@@ -567,8 +560,8 @@ def get_dates_from_text(phrases, preferred_format=None, debug=False):
         new_date = None
 
         if date_formats is None:
-            ymd = re.search("^\d{2,4}[\/-]\d{1,2}[\/-]\d{1,2}$", phrase)
-            mdy = re.search("^\d{1,2}[\/-]\d{1,2}[\/-]\d{4}$", phrase)
+            ymd = search("^\d{2,4}[\/-]\d{1,2}[\/-]\d{1,2}$", phrase)
+            mdy = search("^\d{1,2}[\/-]\d{1,2}[\/-]\d{4}$", phrase)
             if ymd is not None:
                 new_date = pick_best_ymd(ymd.group(0))
             elif mdy is not None:
@@ -577,8 +570,8 @@ def get_dates_from_text(phrases, preferred_format=None, debug=False):
                 ps = phrase.split()
                 if len(ps) > 1:
                     for p in ps:
-                        ymd = re.search("^\d{2,4}[\/-]\d{1,2}[\/-]\d{1,2}$", p)
-                        mdy = re.search("^\d{1,2}[\/-]\d{1,2}[\/-]\d{4}$", p)
+                        ymd = search("^\d{2,4}[\/-]\d{1,2}[\/-]\d{1,2}$", p)
+                        mdy = search("^\d{1,2}[\/-]\d{1,2}[\/-]\d{4}$", p)
                         if ymd is not None:
                             new_date = pick_best_ymd(ymd.group(0))
                         elif mdy is not None:
@@ -917,7 +910,7 @@ def clamp_value(v, min_value, max_value, auto_limit=False):
 def eng_units(val, units="", prefix="", sigfigs=None, unitsep=True, unitary=False):
     """Represents a numeric value in engineering (3x orders magnitude) intervals
     with optional units and length constraints."""
-    mags = [18, 15, 12, 9, 6, 3, 0, -3, -6, -9, -12, -15, -18]
+    mags = (18, 15, 12, 9, 6, 3, 0, -3, -6, -9, -12, -15, -18)
     mods = "E P T G M k _ m u n p f a"
     sign = ""
     if val < 0:

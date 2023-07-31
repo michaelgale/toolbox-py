@@ -24,9 +24,8 @@
 #
 
 import copy
-import string
 import nltk
-
+from string import punctuation
 from toolbox.datautils import *
 
 
@@ -115,8 +114,9 @@ class TextProc:
             words = text
         else:
             words = self.split_text
+        puncs = (*punctuation, "•", "»")
         for word in words:
-            if len(word) == 1 and word in [*string.punctuation, "•", "»"]:
+            if len(word) == 1 and word in puncs:
                 continue
             if len(word) > 0 and word.lower() not in self.filter:
                 w = strip_punc(word, filter_chars="{ } [ ] ( ) | “ ” , • » ! ? * §")

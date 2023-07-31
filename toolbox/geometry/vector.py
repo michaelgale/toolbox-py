@@ -174,11 +174,11 @@ class Matrix(object):
     def det(self):
         """determinant of the matrix"""
         r = self.rows
-        terms = [
+        terms = (
             r[0][0] * (r[1][1] * r[2][2] - r[1][2] * r[2][1]),
             r[0][1] * (r[1][2] * r[2][0] - r[1][0] * r[2][2]),
             r[0][2] * (r[1][0] * r[2][1] - r[1][1] * r[2][0]),
-        ]
+        )
         return sum(terms)
 
     def flatten(self):

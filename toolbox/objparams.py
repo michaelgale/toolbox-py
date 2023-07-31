@@ -50,8 +50,7 @@ def get_all_descendent_classes(Class):
 
 def filtered_locals(caller_locals):
     result = caller_locals.copy()
-    ignored_local_args = ["self", "kwargs"]
-    for arg in ignored_local_args:
+    for arg in ("self", "kwargs"):
         result.pop(arg, caller_locals)
     return result
 

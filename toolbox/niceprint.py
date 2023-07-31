@@ -31,7 +31,7 @@ import crayons
 
 from .datautils import get_numbers, get_email_addresses, replace_prov_state_codes
 
-colour_gradient = [
+colour_gradient = (
     (5e9, crayons.red, False),
     (2e9, crayons.red, True),
     (1e9, crayons.yellow, True),
@@ -44,13 +44,13 @@ colour_gradient = [
     (5e6, crayons.blue, False),
     (2e6, crayons.magenta, False),
     (0, crayons.black, True),
-]
-mono_gradient = [
+)
+mono_gradient = (
     (1e9, crayons.white, True),
     (2e8, crayons.white, False),
     (5e7, crayons.normal, False),
     (0, crayons.black, True),
-]
+)
 
 
 def file_size_str(size, style=None):
@@ -180,7 +180,6 @@ def toolboxprint(
     bold_words=None,
 ):
     """Prints a string with fancy colourization for common items like numbers."""
-    s = []
     text = str(text)
     ts = text
     numbers = get_numbers(text)
@@ -266,3 +265,48 @@ def rich_colour_str(s, colour=None, bold=False, suffix=""):
     colour = colour if colour is not None else "#A0A0A0"
     bold = "bold" if bold else ""
     return "[%s %s]%s[/]%s" % (colour, bold, str(s), suffix)
+
+
+EMOJI_COUNTRY_CODE_DICT = {
+    "CA": ":canada:",
+    "US": ":united_states:",
+    "GB": ":united_kingdom:",
+    "GG": ":united_kingdom:",
+    "EU": ":european_union:",
+    "DE": ":germany:",
+    "CH": ":switzerland:",
+    "DK": ":denmark:",
+    "NO": ":norway:",
+    "SE": ":sweden:",
+    "AU": ":australia:",
+    "NZ": ":new_zealand:",
+    "FR": ":france:",
+    "BE": ":belgium:",
+    "NL": ":netherlands:",
+    "IT": ":italy:",
+    "SE": ":sweden:",
+    "SG": ":singapore:",
+    "KR": ":south_korea:",
+    "CN": ":china:",
+    "HU": ":hungary:",
+    "IE": ":ireland:",
+    "JP": ":flag_for_japan:",
+    "HK": ":hong_kong_sar_china:",
+    "PL": ":poland:",
+    "IN": ":india:",
+    "CZ": ":czechia:",
+    "ES": ":spain:",
+    "MX": ":mexico:",
+    "AT": ":austria:",
+    "FI": ":finland:",
+    "RS": ":serbia:",
+    "SI": ":slovenia:",
+    "PT": ":portugal:",
+}
+
+
+def emoji_code_from_country(code, bold=False):
+    code = code.upper()
+    if code in EMOJI_COUNTRY_CODE_DICT:
+        return EMOJI_COUNTRY_CODE_DICT[code]
+    return "[bold red]%s[/]" % (code) if bold else "[red]%s[/]" % (code)

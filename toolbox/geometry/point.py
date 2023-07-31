@@ -225,11 +225,7 @@ def grid_points_2d(length, width, div, width_div=None):
         py = [-width / 2.0 + (y / (wd - 1)) * width for y in range(wd)]
     else:
         py = [width]
-    pts = []
-    for x in px:
-        for y in py:
-            pts.append((x, y))
-    return pts
+    return [(x, y) for x in px for y in py]
 
 
 def translate_points(pts, dx, dy=None):
@@ -333,15 +329,17 @@ def discretize_polyline(pts, segments, keep_all_pts=True):
     if isinstance(segments, (int, float)):
         segments = [(x + 1) / segments for x in list(range(int(segments)))]
     vtx = [Point(pts[0]).as_tuple()]
+    num_segments = len(segments)
     for i, segment in enumerate(segments):
         ds = segment * total_length
+        i_1 = i + 1
         for line in lines:
             if ds <= (line[2] + line[3]):
                 dl = (ds - line[3]) / line[2]
                 v = discretize_line(line[0], line[1], [dl])
                 vtx.append(v[1])
-                if (i + 1) < len(segments) and keep_all_pts:
-                    dn = (segments[i + 1]) * total_length
+                if i_1 < num_segments and keep_all_pts:
+                    dn = (segments[i_1]) * total_length
                     if (dn - line[3]) / line[2] > 1.0:
                         vtx.append(line[1])
                 break
