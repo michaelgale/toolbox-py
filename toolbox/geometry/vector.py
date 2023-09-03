@@ -270,7 +270,7 @@ class Vector(object):
         return self.x == other.x and self.y == other.y and self.z == other.z
 
     def __abs__(self):
-        return (self.x ** 2 + self.y ** 2 + self.z ** 2) ** 0.5
+        return (self.x**2 + self.y**2 + self.z**2) ** 0.5
 
     def __rmul__(self, other):
         if isinstance(other, Number):
@@ -420,7 +420,7 @@ class Vector2D(object):
         return self.x != other.x or self.y != other.y
 
     def __abs__(self):
-        return (self.x ** 2 + self.y ** 2) ** 0.5
+        return (self.x**2 + self.y**2) ** 0.5
 
     def __rmul__(self, other):
         if isinstance(other, Number):

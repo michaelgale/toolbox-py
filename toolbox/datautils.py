@@ -30,7 +30,6 @@ import math
 import numpy as np
 import cv2
 import string
-import pycountry
 import itertools
 import nltk
 from re import search, match
@@ -717,22 +716,24 @@ def replace_country_names(text):
     ts = text.split()
     for t in ts:
         tc = strip_punc(t)
-        try:
-            country_code = pycountry.countries.get(name=tc)
-        except LookupError:
+        if tc in COUNTRY_NAME:
+            country_code = COUNTRY_NAME[tc]
+        elif tc.title() in COUNTRY_NAME:
+            country_code = COUNTRY_NAME[tc.title()]
+        else:
             continue
         if country_code is not None:
-            rs = rs.replace(tc, country_code.alpha_2)
+            rs = rs.replace(tc, country_code)
     for ng in [2, 3, 4]:
         ngs = n_grams(rs, ng, as_list=False)
         for n in ngs:
             tc = strip_punc(n)
-            try:
-                country_code = pycountry.countries.get(name=tc)
-            except LookupError:
+            if tc in COUNTRY_NAME:
+                country_code = COUNTRY_NAME[tc]
+            else:
                 continue
             if country_code is not None:
-                rs = rs.replace(tc, country_code.alpha_2)
+                rs = rs.replace(tc, country_code)
     return rs
 
 
@@ -742,12 +743,12 @@ def replace_country_codes(text):
     rs = text
     ts = text.split()
     for t in ts:
-        try:
-            country_code = pycountry.countries.get(alpha_2=t)
-        except LookupError:
+        if t in COUNTRY_DB:
+            country_code = COUNTRY_DB[t]
+        else:
             continue
         if country_code is not None:
-            rs = rs.replace(t, country_code.name)
+            rs = rs.replace(t, country_code)
     return rs
 
 
@@ -922,8 +923,8 @@ def eng_units(val, units="", prefix="", sigfigs=None, unitsep=True, unitary=Fals
     ndig = max(ndig, 2)
     s = ""
     for mag, mod in zip(mags, mods.split()):
-        if val > 10 ** mag:
-            s = "%.3f" % (val / 10 ** mag)
+        if val > 10**mag:
+            s = "%.3f" % (val / 10**mag)
             s = s[:ndig]
             s = s.rstrip("0")
             if s.endswith("."):

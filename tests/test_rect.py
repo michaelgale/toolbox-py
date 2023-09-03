@@ -221,7 +221,6 @@ def test_multi_anchored():
 
 
 def test_shove_bound():
-
     r1 = Rect(2, 1)
     r2 = Rect(1, 3)
     r1.move_bottom_left_to((0, 0))

@@ -44,7 +44,7 @@ The **toolbox** package can be installed directly from the source code:
 ```shell
     $ git clone https://github.com/michaelgale/toolbox-py.git
     $ cd toolbox-py
-    $ python setup.py install
+    $ pip install .
 ```
 
 ## Usage

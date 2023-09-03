@@ -32,7 +32,6 @@ from functools import reduce
 
 
 class Point:
-
     __slots__ = ("x", "y")
 
     def __init__(self, x=0.0, y=None):
@@ -104,10 +103,10 @@ class Point:
             return "(%s %s)" % (self.x, self.y)
 
     def length(self):
-        return math.sqrt(self.x ** 2 + self.y ** 2)
+        return math.sqrt(self.x**2 + self.y**2)
 
     def length_squared(self):
-        return self.x ** 2 + self.y ** 2
+        return self.x**2 + self.y**2
 
     def distance_to(self, p):
         """Calculate the distance between two points."""

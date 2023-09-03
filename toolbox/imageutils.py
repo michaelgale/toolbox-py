@@ -37,7 +37,8 @@ class ImageMixin:
     @staticmethod
     def auto_open(img):
         """Returns an opened image if passed a file path or passthru an image.
-        This is a convenience method to allow functions to be passed an array or filename."""
+        This is a convenience method to allow functions to be passed an array or filename.
+        """
         if isinstance(img, str):
             return ImageMixin.open_image(img)
         return img

@@ -143,7 +143,6 @@ class TextProc:
         return None
 
     def get_dates(self, preferred_format=None):
-
         lines = self.raw_text.splitlines()
         dates = get_dates_from_text(lines, debug=self.debug)
         # if no dates are found, try a last ditch effort by feeding lines with

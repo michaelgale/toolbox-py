@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 cd ..
-python setup.py install
+pip install .
 cd tests
 pytest -s -v --cov

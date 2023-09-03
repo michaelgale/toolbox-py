@@ -59,10 +59,10 @@ setuptools.setup(
         'License :: OSI Approved :: MIT License'
     ],
     install_requires=[
+        'dateparser',
         'jinja2',
         'metayaml',
         'crayons',
-        'pycountry',
         'pytest-cov',
     ],
     scripts=['toolbox/scripts/foldercheck.py', 'toolbox/scripts/tidyfolder.py'],
