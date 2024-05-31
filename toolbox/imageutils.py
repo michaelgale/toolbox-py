@@ -28,6 +28,8 @@ import cv2
 import math
 import numpy as np
 
+from .datautils import clamp_value
+
 
 class ImageMixin:
     """This class adds image processing and manipulation utilities either standalone
@@ -89,24 +91,35 @@ class ImageMixin:
         return ImageMixin.channel_range(img, 1)
 
     @staticmethod
-    def pad_image(img, width):
+    def pad_image(img, width, val=None, top=True, left=True, bottom=True, right=True):
         """Pads an image perimenter by width pixels"""
         img = ImageMixin.auto_open(img)
+
         if len(img.shape) > 2:
-            pad = tuple(list([0 for _ in range(img.shape[2])]))
+            if val is not None:
+                pad = val
+            else:
+                pad = tuple(list([0 for _ in range(img.shape[2])]))
         else:
-            pad = 0
+            pad = val if val is not None else 0
         p = int(width)
-        r = cv2.copyMakeBorder(img, p, p, p, p, cv2.BORDER_CONSTANT, value=pad)
+        pt = p if top else 0
+        pl = p if left else 0
+        pb = p if bottom else 0
+        pr = p if right else 0
+        r = cv2.copyMakeBorder(img, pt, pb, pl, pr, cv2.BORDER_CONSTANT, value=pad)
         return r
 
     @staticmethod
-    def pad_to_fit(img, x1, x2, y1, y2):
+    def pad_to_fit(img, x1, x2, y1, y2, val=None):
         img = ImageMixin.auto_open(img)
         if len(img.shape) > 2:
-            pad = tuple(list([0 for _ in range(img.shape[2])]))
+            if val is not None:
+                pad = val
+            else:
+                pad = tuple(list([0 for _ in range(img.shape[2])]))
         else:
-            pad = 0
+            pad = val if val is not None else 0
         img = cv2.copyMakeBorder(
             img,
             -min(0, y1),
@@ -133,6 +146,25 @@ class ImageMixin:
         if len(img.shape) > 2:
             return img[y1:y2, x1:x2, :]
         return img[y1:y2, x1:x2]
+
+    @staticmethod
+    def crop_to_content(img, bg=None, tol=4, widthwise=True, heightwise=True):
+        """Crops an image to the bounding box of content using either
+        a provided background colour or the top left pixel colour."""
+        img = ImageMixin.auto_open(img)
+        thr = bg if bg is not None else img[0, 0]
+        thr_l = tuple(int(clamp_value(thr[i] - tol, 0, 255)) for i in range(3))
+        thr_h = tuple(int(clamp_value(thr[i] + tol, 0, 255)) for i in range(3))
+        thresh = cv2.inRange(img, thr_l, thr_h)
+        thresh = 255 - thresh
+        x, y, w, h = cv2.boundingRect(thresh)
+        hh, ww, _ = img.shape
+        y0 = y if heightwise else 0
+        x0 = x if widthwise else 0
+        yl = h if heightwise else hh
+        xl = w if widthwise else ww
+        img = img[y0 : y0 + yl, x0 : x0 + xl]
+        return img
 
     @staticmethod
     def crop_to_fit_other(img, other):
@@ -283,6 +315,36 @@ class ImageMixin:
         z = np.copy(img)
         z[mask > 0] = a[mask > 0]
         return z
+
+    @staticmethod
+    def first_non_transparent_edge(img, pos, edge=None, thr=0):
+        """Returns the coordinate of the first non-transparent pixel
+        from any of the top, left, bottom, right edges along a strip
+        of pixels at pos."""
+        img = ImageMixin.auto_open(img)
+        width, height = ImageMixin.image_size(img)
+        xinc, yinc = 0, 0
+        if isinstance(pos, (tuple, list)):
+            xpos, ypos = int(pos[0]), int(pos[1])
+        else:
+            xpos, ypos = int(pos), int(pos)
+        if edge.lower() == "left":
+            x0, x1, y, xinc = 0, width - 1, ypos, 1
+        elif edge.lower() == "right":
+            x0, x1, y, xinc = width - 1, 0, ypos, -1
+        elif edge.lower() == "top":
+            x, y0, y1, yinc = xpos, 0, height - 1, 1
+        elif edge.lower() == "bottom":
+            x, y0, y1, yinc = xpos, height - 1, 0, -1
+        if xinc:
+            for xo in range(x0, x1, xinc):
+                if img[y, xo, 3] > thr:
+                    return xo, y
+        if yinc:
+            for yo in range(y0, y1, yinc):
+                if img[yo, x, 3] > thr:
+                    return x, yo
+        return None
 
     @staticmethod
     def count_transparent_pixels(img, region=None):

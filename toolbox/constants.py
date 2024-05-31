@@ -1424,3 +1424,43 @@ FLAG_DB = {
     "ZM": "🇿🇲",
     "ZW": "🇿🇼",
 }
+
+EU_COUNTRIES = "BE BG CZ DK DE EE IE EL ES FR HR IT CY LV LT LU HU MT NL AT PL PT RO SI SK FI SE CH NO".split()
+
+
+EMOJI_COUNTRY_CODE_DICT = {
+    "CA": ":canada:",
+    "US": ":united_states:",
+    "GB": ":united_kingdom:",
+    "GG": ":united_kingdom:",
+    "EU": ":european_union:",
+    "DE": ":germany:",
+    "CH": ":switzerland:",
+    "DK": ":denmark:",
+    "NO": ":norway:",
+    "SE": ":sweden:",
+    "AU": ":australia:",
+    "NZ": ":new_zealand:",
+    "FR": ":france:",
+    "BE": ":belgium:",
+    "NL": ":netherlands:",
+    "IT": ":italy:",
+    "SE": ":sweden:",
+    "SG": ":singapore:",
+    "KR": ":south_korea:",
+    "CN": ":china:",
+    "HU": ":hungary:",
+    "IE": ":ireland:",
+    "JP": ":flag_for_japan:",
+    "HK": ":hong_kong_sar_china:",
+    "PL": ":poland:",
+    "IN": ":india:",
+    "CZ": ":czechia:",
+    "ES": ":spain:",
+    "MX": ":mexico:",
+    "AT": ":austria:",
+    "FI": ":finland:",
+    "RS": ":serbia:",
+    "SI": ":slovenia:",
+    "PT": ":portugal:",
+}

@@ -21,7 +21,7 @@ def test_apply_params():
 
 
 def test_yaml_params():
-    tp = Params(yml="test_params.yml")
+    tp = Params(yml="./tests/test_params.yml")
     assert "abc" in tp.__dict__
     assert "defg" in tp.__dict__
     assert "hijk" in tp.__dict__

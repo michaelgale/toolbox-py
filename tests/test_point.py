@@ -12,9 +12,9 @@ def test_point_length():
 
 def test_point_func():
     a = Point(5, 8)
-    (bx, by) = a.swapped()
-    assert a.x == by
-    assert a.y == bx
+    b = a.swapped()
+    assert b.y == 5
+    assert b.x == 8
     a.move_to(-3, 2)
     assert a.x == -3
     assert a.y == 2
@@ -113,3 +113,15 @@ def test_discretize_poly():
     pts = [(0.25, 0.25), (0.75, 0.25), (0.75, 0.75), (0.25, 0.25)]
     vtx = discretize_polyline(pts, 10)
     # print(vtx)
+
+
+def test_chaining():
+    pt = Point(1, 2)
+    p0 = pt.move_to(3, 4).translate(-5, 1)
+    assert pt.as_tuple() == (3, 4)
+    assert p0.as_tuple() == (-2, 5)
+
+    pt = Point(-3, -4)
+    p1 = pt.mirror_x().mirror_y().swapped()
+    assert p1.as_tuple() == (4, 3)
+    assert pt.as_tuple() == (-3, -4)

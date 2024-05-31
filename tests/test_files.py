@@ -8,14 +8,14 @@ VERBOSE = False
 
 
 def test_full_path():
-    fullpath = full_path("./testfiles/file1.txt")
+    fullpath = full_path("./tests/testfiles/file1.txt")
     assert fullpath.endswith("file1.txt")
     assert fullpath.startswith(os.sep)
     assert "testfiles" in fullpath
 
 
 def test_split_path():
-    path, name = split_path("./testfiles/file1.txt")
+    path, name = split_path("./tests/testfiles/file1.txt")
     assert name == "file1.txt"
     assert path.startswith(os.sep)
     assert "testfiles" in path
@@ -27,48 +27,48 @@ fo.safe_overwrite = False
 
 
 def test_fileops():
-    res = fo.get_file_list("./testfiles", recursive=True)
+    res = fo.get_file_list("./tests/testfiles", recursive=True)
     assert res
-    res = fo.get_file_list("./testfiles", spec="*.txt", recursive=False)
+    res = fo.get_file_list("./tests/testfiles", spec="*.txt", recursive=False)
     assert res
-    res = fo.get_file_list("./testfiles/file1.txt", recursive=False)
+    res = fo.get_file_list("./tests/testfiles/file1.txt", recursive=False)
     assert not res
-    res = fo.rename_file("./testfiles/file1.txt", "filex.txt")
+    res = fo.rename_file("./tests/testfiles/file1.txt", "filex.txt")
     assert res
-    res = fo.rename_file("./testfiles/file1.txt", "file1.txt")
+    res = fo.rename_file("./tests/testfiles/file1.txt", "file1.txt")
     assert res
-    res = fo.move_file("./testfiles/file1.txt", "./testfiles/dir1")
+    res = fo.move_file("./tests/testfiles/file1.txt", "./tests/testfiles/dir1")
     assert res
-    res = fo.move_file("./testfiles/file1.txt", "./testfiles/blah")
+    res = fo.move_file("./tests/testfiles/file1.txt", "./tests/testfiles/blah")
     assert not res
-    res = fo.remove_file("./testfiles/file2.txt")
+    res = fo.remove_file("./tests/testfiles/file2.txt")
     assert res
-    res = fo.remove_file("./testfiles/blah.txt")
+    res = fo.remove_file("./tests/testfiles/blah.txt")
     assert not res
-    res = fo.remove_file("./testfiles/dir2")
+    res = fo.remove_file("./tests/testfiles/dir2")
     assert not res
-    res = fo.copy_file("./testfiles/file1.txt", "./testfiles/dir2")
+    res = fo.copy_file("./tests/testfiles/file1.txt", "./tests/testfiles/dir2")
     assert res
-    res = fo.copy_file("./testfiles/blah.txt", "./testfiles/dir2")
+    res = fo.copy_file("./tests/testfiles/blah.txt", "./tests/testfiles/dir2")
     assert not res
-    res = fo.copy_file("./testfiles/file1.txt", "./testfiles/filey.txt")
+    res = fo.copy_file("./tests/testfiles/file1.txt", "./tests/testfiles/filey.txt")
     assert res
-    res = fo.copy_file("./testfiles/file1.txt", "./testfiles")
+    res = fo.copy_file("./tests/testfiles/file1.txt", "./tests/testfiles")
     assert not res
     fo.safe_overwrite = True
-    res = fo.copy_file("./testfiles/file1.txt", "./testfiles")
+    res = fo.copy_file("./tests/testfiles/file1.txt", "./tests/testfiles")
     fo.safe_overwrite = False
     assert res
 
 
 def test_dirops():
-    res = fo.make_directory("./testfiles/file1.txt")
+    res = fo.make_directory("./tests/testfiles/file1.txt")
     assert not res
-    res = fo.make_directory("./testfiles/dir1")
+    res = fo.make_directory("./tests/testfiles/dir1")
     assert not res
-    res = fo.make_directory("./testfiles/newdir")
+    res = fo.make_directory("./tests/testfiles/newdir")
     assert res
-    files = fo.get_file_list("./testfiles", recursive=True)
+    files = fo.get_file_list("./tests/testfiles", recursive=True)
     if VERBOSE:
         for f in files:
             print(str(f))
@@ -77,19 +77,19 @@ def test_dirops():
 
 
 def test_remove_ops():
-    res = fo.remove_file("./testfiles/file1.txt")
+    res = fo.remove_file("./tests/testfiles/file1.txt")
     assert res
-    res = fo.remove_file("./testfiles/blah.txt")
+    res = fo.remove_file("./tests/testfiles/blah.txt")
     assert not res
-    res = fo.remove_dir("./testfiles/file1.txt")
+    res = fo.remove_dir("./tests/testfiles/file1.txt")
     assert not res
-    res = fo.remove_dir("./testfiles/dir1")
+    res = fo.remove_dir("./tests/testfiles/dir1")
     assert res
-    res = fo.remove_dir("./testfiles/blah")
+    res = fo.remove_dir("./tests/testfiles/blah")
     assert not res
-    res = fo.remove_files_from_dir("./testfiles/file2.txt")
+    res = fo.remove_files_from_dir("./tests/testfiles/file2.txt")
     assert not res
-    res = fo.remove_files_from_dir("./testfiles", remove_subdir=True)
+    res = fo.remove_files_from_dir("./tests/testfiles", remove_subdir=True)
     assert res
 
 
@@ -98,30 +98,30 @@ fs.verbose_errors_only = False
 
 
 def test_real_rename():
-    res = fs.rename_file("./testfiles/file1.txt", "abc.txt")
+    res = fs.rename_file("./tests/testfiles/file1.txt", "abc.txt")
     assert res
-    newfile = full_path("./testfiles/abc.txt")
+    newfile = full_path("./tests/testfiles/abc.txt")
     res = os.path.isfile(newfile)
     assert res
     d, fn = split_path(newfile)
     assert fn == "abc.txt"
-    res = fs.rename_file("./testfiles/abc.txt", "file1.txt")
+    res = fs.rename_file("./tests/testfiles/abc.txt", "file1.txt")
     assert res
 
 
 def test_real_move():
-    res = fs.move_file("./testfiles/file1.txt", "./testfiles/dir1")
-    newfile = full_path("./testfiles/dir1/file1.txt")
+    res = fs.move_file("./tests/testfiles/file1.txt", "./tests/testfiles/dir1")
+    newfile = full_path("./tests/testfiles/dir1/file1.txt")
     res = os.path.isfile(newfile)
     assert res
     d, fn = split_path(newfile)
     assert fn == "file1.txt"
-    res = fs.move_file("./testfiles/dir1/file1.txt", "./testfiles")
+    res = fs.move_file("./tests/testfiles/dir1/file1.txt", "./tests/testfiles")
     assert res
-    newfile = full_path("./testfiles/file1.txt")
+    newfile = full_path("./tests/testfiles/file1.txt")
     res = os.path.isfile(newfile)
     assert res
-    oldfile = full_path("./testfiles/dir1/file1.txt")
+    oldfile = full_path("./tests/testfiles/dir1/file1.txt")
     res = os.path.isfile(oldfile)
     assert not res
 
@@ -129,39 +129,39 @@ def test_real_move():
 def test_real_copy():
     fs.overwrite = True
     fs.safe_overwrite = True
-    res = fs.copy_file("./testfiles/file2.txt", "./testfiles/dir2")
-    newfile = full_path("./testfiles/dir2/file2.txt")
+    res = fs.copy_file("./tests/testfiles/file2.txt", "./tests/testfiles/dir2")
+    newfile = full_path("./tests/testfiles/dir2/file2.txt")
     res = os.path.isfile(newfile)
     assert res
     d, fn = split_path(newfile)
     assert fn == "file2.txt"
-    res = fs.copy_file("./testfiles/dir2/file2.txt", "./testfiles")
+    res = fs.copy_file("./tests/testfiles/dir2/file2.txt", "./tests/testfiles")
     assert res
-    newfile = full_path("./testfiles/file2.txt")
+    newfile = full_path("./tests/testfiles/file2.txt")
     res = os.path.isfile(newfile)
     assert res
-    oldfile = full_path("./testfiles/dir2/file2.txt")
+    oldfile = full_path("./tests/testfiles/dir2/file2.txt")
     res = os.path.isfile(oldfile)
     assert res
-    res = fs.remove_file("./testfiles/dir2/file2.txt")
+    res = fs.remove_file("./tests/testfiles/dir2/file2.txt")
     assert res
     res = os.path.isfile(oldfile)
     assert not res
-    res = fs.remove_file("./testfiles/file2-1.txt")
+    res = fs.remove_file("./tests/testfiles/file2-1.txt")
     assert res
 
 
 def test_real_dir():
-    res = fs.make_directory("./testfiles/newdir")
+    res = fs.make_directory("./tests/testfiles/newdir")
     assert res
-    res = fs.make_directory("./testfiles/newdir")
+    res = fs.make_directory("./tests/testfiles/newdir")
     assert not res
-    res = fs.copy_file("./testfiles/file3.txt", "./testfiles/newdir")
+    res = fs.copy_file("./tests/testfiles/file3.txt", "./tests/testfiles/newdir")
     assert res
-    newfile = full_path("./testfiles/newdir/file3.txt")
+    newfile = full_path("./tests/testfiles/newdir/file3.txt")
     res = os.path.isfile(newfile)
     assert res
-    res = fs.remove_dir("./testfiles/newdir", remove_all=True)
+    res = fs.remove_dir("./tests/testfiles/newdir", remove_all=True)
     assert res
-    res = fs.remove_dir("./testfiles/newdir")
+    res = fs.remove_dir("./tests/testfiles/newdir")
     assert not res

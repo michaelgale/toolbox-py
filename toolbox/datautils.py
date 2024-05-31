@@ -134,7 +134,14 @@ def n_grams(text, n, as_list=True):
     return w
 
 
-def parse_value(text, spec, max_value=None):
+def parse_value_into(var, text, spec, max_value=None):
+    v = parse_value(text, spec, max_value)
+    if v is not None:
+        return v
+    return var
+
+
+def parse_value(text, spec, max_value=None, first=False, last=False):
     """Finds a value embedded in a formatted string (spec) in the form of
     'placeholder placeholder2 %v placeholder3' where placeholder text
     helps locate the desired value denoted by %v"""
@@ -159,21 +166,37 @@ def parse_value(text, spec, max_value=None):
                             return value
                     except:
                         pass
+    vals = []
+    words = text.split()
+    word = 0
     for phrase in n_grams(text, slen, as_list=True):
         matches = 0
+        vals = []
         if len(phrase) == slen:
-            for p in zip(phrase, spec.split()):
+            for i, p in enumerate(zip(phrase, spec.split())):
                 if p[0] == p[1]:
                     matches += 1
-                if p[1] == "%v":
+                if p[1] == "%t":
+                    vals.append(str(p[0]))
+                elif p[1] == "%v":
                     try:
                         x = p[0].replace("$", "")
                         x = x.replace("%", "")
-                        value = float(x)
+                        vals.append(float(x))
                     except:
                         pass
-        if matches == slen - 1:
-            return value
+                elif p[1] == "%*":
+                    vals.append(" ".join(words[word + i :]))
+        word += 1
+
+        if matches == slen - len(vals):
+            if len(vals) == 1:
+                return vals[0]
+            if first:
+                return vals[0]
+            if last:
+                return vals[-1]
+            return vals
     return None
 
 

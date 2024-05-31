@@ -63,6 +63,32 @@ def test_bounding():
     assert r.bottom == -4
 
 
+def _almost_same(x, y, tol=1e-2):
+    if isinstance(x, (list, tuple)):
+        return all((abs(xe - ye) < tol for xe, ye in zip(x, y)))
+    return abs(x - y) < tol
+
+
+def test_rotated():
+    pts = [(1, 2), (3, 5), (-7, -4), (20, 8)]
+    r = Rect()
+    r.bounding_rect(pts)
+    assert r.left == -7
+    assert r.top == 8
+    assert r.right == 20
+    assert r.bottom == -4
+    rr = r.rotated_boundbox(5)
+    assert _almost_same(rr.size, (27.94, 14.31))
+    rr = r.rotated_boundbox(45)
+    assert _almost_same(rr.size, (27.58, 27.58))
+    rr = r.rotated_boundbox(90)
+    assert _almost_same(rr.size, (12, 27))
+    rr = r.rotated_boundbox(-90)
+    assert _almost_same(rr.size, (12, 27))
+    rr = r.rotated_boundbox(-45)
+    assert _almost_same(rr.size, (27.58, 27.58))
+
+
 def test_layout_rects():
     r1 = Rect(5, 5)
     r2 = Rect(5, 3)
@@ -320,6 +346,17 @@ def test_map_pt():
     assert mp == (4, 0)
     mp = r1.map_pt_in_other_rect(r2, (0, 30), clamp_bounds=False)
     assert mp == (0, 36)
+
+
+def test_rect_from_image():
+    IMAGE_FILE = "./tests/testfiles/cropcontent.png"
+    r1 = Rect.rect_from_image(IMAGE_FILE)
+    assert r1.width == 639
+    assert r1.height == 479
+    assert r1.left == 0
+    assert r1.top == 0
+    assert r1.right == 639
+    assert r1.bottom == 479
 
 
 # def test_arrange():

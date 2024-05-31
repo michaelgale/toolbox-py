@@ -24,7 +24,6 @@
 # Geometry / Point Class
 #
 
-import copy
 import math
 from math import sin, cos, radians, sqrt, atan, degrees, atan2, hypot
 from numbers import Number
@@ -117,7 +116,7 @@ class Point:
         return (self.x, self.y)
 
     def swapped(self):
-        return (self.y, self.x)
+        return Point(self.y, self.x)
 
     def clone(self):
         """Return a full copy of this point."""
@@ -127,16 +126,19 @@ class Point:
         """Convert co-ordinate values to integers."""
         self.x = int(self.x)
         self.y = int(self.y)
+        return self
 
     def floatize(self):
         """Convert co-ordinate values to floats."""
         self.x = float(self.x)
         self.y = float(self.y)
+        return self
 
     def move_to(self, x, y):
         """Reset x & y coordinates."""
         self.x = x
         self.y = y
+        return self
 
     def translate(self, x, y=None):
         """Move to new (x+dx,y+dy)."""
@@ -146,8 +148,7 @@ class Point:
             dx, dy = x, y
         else:
             dx, dy = x, x
-        self.x = self.x + dx
-        self.y = self.y + dy
+        return Point(self.x + dx, self.y + dy)
 
     def get_translated(self, x, y=None):
         if isinstance(x, (tuple, Point, list)):
@@ -157,10 +158,10 @@ class Point:
         return self.x + x, self.y + x
 
     def mirror_y(self):
-        self.y = -self.y
+        return Point(self.x, -self.y)
 
     def mirror_x(self):
-        self.x = -self.x
+        return Point(-self.x, self.y)
 
     def rotate(self, rad):
         """Rotate counter-clockwise by rad radians.
@@ -236,12 +237,7 @@ def translate_points(pts, dx, dy=None):
         xo, yo = dx, dy
     else:
         xo, yo = dx, dx
-    new_pts = []
-    for pt in pts:
-        np = Point(pt)
-        np.translate(xo, yo)
-        new_pts.append(np.as_tuple())
-    return new_pts
+    return [Point(pt).translate(xo, yo).as_tuple() for pt in pts]
 
 
 def grid_points_at_height(length, width, height, div, width_div=None):

@@ -5,8 +5,10 @@ import pytest
 # my modules
 from toolbox import *
 
-IMAGE1 = "./testfiles/image1.png"
-IMAGE2 = "./testfiles/image2.png"
+IMAGE1 = "./tests/testfiles/image1.png"
+IMAGE2 = "./tests/testfiles/image2.png"
+IMAGE3 = "./tests/testfiles/cropcontent.png"
+IMAGE4 = "./tests/testfiles/non_trans.png"
 
 
 def almost_same(x, y):
@@ -46,13 +48,13 @@ def test_image_crop():
     img2 = ImageMixin.crop_image(img1, (10, 10), (100, 100))
     assert img1.shape == (220, 306, 4)
     assert img2.shape == (90, 90, 4)
-    ImageMixin.save_image("./testfiles/crop.png", img2)
+    ImageMixin.save_image("./tests/testfiles/crop.png", img2)
 
     img2 = ImageMixin.crop_image(img1, (-20, -20), (400, 100))
     assert img1.shape == (220, 306, 4)
     assert img2.shape == (120, 420, 4)
     assert ImageMixin.image_size(img2) == (420, 120)
-    ImageMixin.save_image("./testfiles/crop2.png", img2)
+    ImageMixin.save_image("./tests/testfiles/crop2.png", img2)
 
 
 def test_image_crop_fit():
@@ -62,7 +64,7 @@ def test_image_crop_fit():
     assert img2.shape == (140, 140, 4)
     img3 = ImageMixin.crop_to_fit_other(img1, img2)
     assert img3.shape == (140, 140, 4)
-    ImageMixin.save_image("./testfiles/cropfit1.png", img3)
+    ImageMixin.save_image("./tests/testfiles/cropfit1.png", img3)
 
     img1 = ImageMixin.open_image(IMAGE1)
     img2 = ImageMixin.crop_image(img1, (10, 10), (100, 100))
@@ -70,7 +72,7 @@ def test_image_crop_fit():
     assert img2.shape == (90, 90, 4)
     img4 = ImageMixin.crop_to_fit_other(img2, img1)
     assert img4.shape == (220, 306, 4)
-    ImageMixin.save_image("./testfiles/cropfit2.png", img4)
+    ImageMixin.save_image("./tests/testfiles/cropfit2.png", img4)
 
 
 def test_image_thr():
@@ -177,7 +179,7 @@ def test_normhue():
 def test_count_trans():
     img1 = ImageMixin.open_image(IMAGE1)
     img2 = ImageMixin.crop_image(img1, (5, 5), (310, 230))
-    ImageMixin.save_image("./testfiles/count.png", img2)
+    ImageMixin.save_image("./tests/testfiles/count.png", img2)
     counts = ImageMixin.count_transparent_pixels(img2)
     assert counts["top_left"] == 55
     assert counts["top_right"] == 679
@@ -187,5 +189,35 @@ def test_count_trans():
     assert counts["min"] == "top_left"
     assert counts["max"] == "bottom_right"
 
-    c2 = ImageMixin.count_transparent_pixels("./testfiles/count.png")
+    c2 = ImageMixin.count_transparent_pixels("./tests/testfiles/count.png")
     assert counts == c2
+
+
+def test_crop_content():
+    img1 = ImageMixin.open_image(IMAGE3)
+    img2 = ImageMixin.crop_to_content(img1)
+    ImageMixin.save_image("./tests/testfiles/cropped_to_contents.png", img2)
+    assert img1.shape == (480, 640, 3)
+    assert img2.shape == (425, 587, 3)
+    img3 = ImageMixin.crop_to_content(img1, widthwise=False, heightwise=True)
+    ImageMixin.save_image("./tests/testfiles/cropped_to_contents_h.png", img3)
+    assert img3.shape == (425, 640, 3)
+    img4 = ImageMixin.crop_to_content(img1, widthwise=True, heightwise=False)
+    ImageMixin.save_image("./tests/testfiles/cropped_to_contents_w.png", img4)
+    assert img4.shape == (480, 587, 3)
+
+
+def test_find_non_trans():
+    img1 = ImageMixin.open_image(IMAGE4)
+    pos = ImageMixin.first_non_transparent_edge(img1, 240, "left")
+    assert pos == (149, 240)
+    pos = ImageMixin.first_non_transparent_edge(img1, 240, "right")
+    assert pos == (502, 240)
+    pos = ImageMixin.first_non_transparent_edge(img1, 200, "top")
+    assert pos == (200, 126)
+    pos = ImageMixin.first_non_transparent_edge(img1, 500, "bottom")
+    assert pos == (500, 430)
+    pos = ImageMixin.first_non_transparent_edge(img1, 550, "bottom")
+    assert pos is None
+    pos = ImageMixin.first_non_transparent_edge(img1, 10, "left")
+    assert pos is None

@@ -23,11 +23,12 @@
 #
 # Geometry / Rect (rectangle) Class
 #
-
+import math
 import copy
 
 from .point import Point
 from toolbox.datautils import clamp_value
+from toolbox.imageutils import ImageMixin
 
 
 class Rect:
@@ -189,6 +190,15 @@ class Rect:
         self.right += x
         self.top += y
         self.bottom += y
+
+    def rotated_boundbox(self, angle):
+        crect = self.copy()
+        midpt = Point(self.centre)
+        crect.move_to(0, 0)
+        pts = [Point(pt) for pt in crect.get_pts()]
+        rpts = [pt.rotate(math.radians(angle)) for pt in pts]
+        rpts = [pt + midpt for pt in rpts]
+        return crect.bounding_rect(rpts)
 
     @property
     def top_left(self):
@@ -554,7 +564,7 @@ class Rect:
             self.size, offset=self.neg_half, bottom_up=self.bottom_up
         )
 
-    def map_pt_in_other_rect(self, other, pt, clamp_bounds=True):
+    def map_pt_in_other_rect(self, other, pt, clamp_bounds=True, mirror_y=False):
         """Maps a point from our rect into another corresponding rect."""
         x, y = self._xy_from_pt(pt)
         if clamp_bounds:
@@ -568,11 +578,29 @@ class Rect:
         xo = other.left + xr * other.width
         if other.bottom_up:
             yo = (1.0 - yr) * other.height
-            yo += other.top
+            if mirror_y:
+                yo = other.bottom - yo
+            else:
+                yo += other.top
         else:
             yo = yr * other.height
-            yo += other.bottom
+            if mirror_y:
+                yo = other.top - yo
+            else:
+                yo += other.bottom
         return xo, yo
+
+    @staticmethod
+    def rect_from_image(image, bottom_up=True):
+        """Returns an instance of Rect which describes an image / pixel
+        bitmap. The default origin is top-left at 0, 0 with bottom_up=True."""
+        sz = ImageMixin.image_size(image)
+        r = Rect(width=(sz[0] - 1), height=(sz[1] - 1), bottomUp=bottom_up)
+        if bottom_up:
+            r.move_top_left_to((0, 0))
+        else:
+            r.move_bottom_left_to((0, 0))
+        return r
 
     @staticmethod
     def bounding_rect_from_rects(rects, bottom_up=False):

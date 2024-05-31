@@ -30,6 +30,7 @@ import os.path
 import crayons
 
 from .datautils import get_numbers, get_email_addresses, replace_prov_state_codes
+from .constants import EMOJI_COUNTRY_CODE_DICT
 
 colour_gradient = (
     (5e9, crayons.red, False),
@@ -265,44 +266,6 @@ def rich_colour_str(s, colour=None, bold=False, suffix=""):
     colour = colour if colour is not None else "#A0A0A0"
     bold = "bold" if bold else ""
     return "[%s %s]%s[/]%s" % (colour, bold, str(s), suffix)
-
-
-EMOJI_COUNTRY_CODE_DICT = {
-    "CA": ":canada:",
-    "US": ":united_states:",
-    "GB": ":united_kingdom:",
-    "GG": ":united_kingdom:",
-    "EU": ":european_union:",
-    "DE": ":germany:",
-    "CH": ":switzerland:",
-    "DK": ":denmark:",
-    "NO": ":norway:",
-    "SE": ":sweden:",
-    "AU": ":australia:",
-    "NZ": ":new_zealand:",
-    "FR": ":france:",
-    "BE": ":belgium:",
-    "NL": ":netherlands:",
-    "IT": ":italy:",
-    "SE": ":sweden:",
-    "SG": ":singapore:",
-    "KR": ":south_korea:",
-    "CN": ":china:",
-    "HU": ":hungary:",
-    "IE": ":ireland:",
-    "JP": ":flag_for_japan:",
-    "HK": ":hong_kong_sar_china:",
-    "PL": ":poland:",
-    "IN": ":india:",
-    "CZ": ":czechia:",
-    "ES": ":spain:",
-    "MX": ":mexico:",
-    "AT": ":austria:",
-    "FI": ":finland:",
-    "RS": ":serbia:",
-    "SI": ":slovenia:",
-    "PT": ":portugal:",
-}
 
 
 def emoji_code_from_country(code, bold=False):

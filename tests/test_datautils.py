@@ -150,6 +150,34 @@ def test_parse_value():
     assert abs(v - 34.52) < 1e-6
     v = parse_value(value_text, "Pays: %v dollars")
     assert abs(v - 16.32) < 1e-6
+    v = parse_value(value_text, "footnote %t")
+    assert v == "text"
+    x = 13
+    z = parse_value_into(x, value_text, "Total: %v")
+    assert abs(z - 74.82) < 1e-3
+    x = 15
+    z = parse_value_into(x, value_text, "Other value: %v")
+    assert z == 15
+    y = parse_value(value_text, "Pays: %v %t")
+    assert len(y) == 2
+    assert abs(y[0] - 16.32) < 1e-3
+    assert y[1] == "dollars"
+    z = parse_value(value_text, "placeholder %t that %t contain")
+    assert len(z) == 2
+    assert z[0] == "text"
+    assert z[1] == "could"
+    z = parse_value(value_text, "placeholder %t that %t blah")
+    assert z is None
+    v = parse_value(value_text, "Pays: %v %*")
+    assert len(v) == 2
+    assert abs(v[0] - 16.32) < 1e-3
+    assert v[1] == "dollars footnote text under the document"
+    z = parse_value(value_text, "placeholder %t that %t contain", first=True)
+    assert z is not None
+    assert z == "text"
+    z = parse_value(value_text, "placeholder %t that %t contain", last=True)
+    assert z is not None
+    assert z == "could"
 
 
 email_text = """
